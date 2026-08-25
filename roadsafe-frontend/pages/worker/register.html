@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Registration</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Worker Onboarding</span>
+        </div>
+
+        <div class="content-body">
+            <input type="text" class="input-field" placeholder="Full Name">
+            <input type="text" class="input-field" placeholder="Mobile Number">
+            <input type="text" class="input-field" placeholder="Aadhar / Govt ID No.">
+            <input type="text" class="input-field" placeholder="License Number">
+
+            <input type="text" class="input-field" placeholder="Shop Name & Address">
+
+            <label>Role</label>
+            <div style="margin-bottom: 12px;">
+                <input type="checkbox" id="owner"> <label for="owner">Shop Owner</label>
+                <input type="checkbox" id="worker"> <label for="worker">Worker / Technician</label>
+            </div>
+
+            <label>Skills / Expertise</label>
+            <select class="input-field" multiple style="height: 80px;">
+                <option>Car Mechanic</option>
+                <option>Bike Mechanic</option>
+                <option>Paramedic</option>
+                <option>Towing Operator</option>
+            </select>
+
+            <input type="number" class="input-field" placeholder="Preferred Working Radius (km)">
+
+            <label>Gender</label>
+            <select class="input-field">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+
+            <button class="btn btn-primary"
+                onclick="alert('Registration submitted for approval!'); window.location.href='login.html';">Register
+                Worker</button>
+        </div>
+    </div>
+</body>
+
+</html>

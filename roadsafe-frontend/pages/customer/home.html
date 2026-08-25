@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadSafe GPS - Home</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">RoadSafe-GPS</span>
+            <a href="notifications.html" style="text-decoration:none;">🔔</a>
+        </div>
+
+        <div class="content-body">
+            <h2>Hello, <span id="userName">User</span></h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Ready to assist you today.</p>
+
+            <button class="btn btn-primary" style="height: 120px; font-size: 1.2rem; margin-bottom: 20px;"
+                onclick="window.location.href='request.html'">
+                🚨 Request Assistance
+            </button>
+
+            <div class="card">
+                <h3>Current Status</h3>
+                <p style="color: var(--text-secondary); font-size:0.85rem; margin-top:5px;" id="currentStatusText">No
+                    active requests.</p>
+            </div>
+
+            <div class="card">
+                <h3>Services Provided Nearby</h3>
+                <ul style="list-style: none; margin-top: 10px; font-size: 0.9rem;" id="nearbyServicesList">
+                    <li>🔧 Flat Tyre → Nearby Shops (Shortest Path)</li>
+                    <li>⚡ Battery Jump Start</li>
+                    <li>⛽ Fuel Delivery</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Frequently Visited Shops</h3>
+                <div id="frequentlyVisited" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                    Coimbatore Express Garage - 4.8 ★
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="home.html" class="nav-item active"><span>🏠</span>Home</a>
+            <a href="history.html" class="nav-item"><span>📋</span>Activity</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span>Alerts</a>
+        </div>
+    </div>
+</body>
+
+</html>

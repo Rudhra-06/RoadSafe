@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Help</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Request Assistance</span>
+        </div>
+
+        <div class="content-body">
+            <label>Select Vehicle</label>
+            <select class="input-field" id="vehicleSelect">
+                <option value="v1">2021 Toyota Camry (ABC-123)</option>
+                <option value="v2">2018 Ford F-150 (XYZ-987)</option>
+            </select>
+
+            <label>Help Category / Issue</label>
+            <select class="input-field" id="issueSelect">
+                <option value="Flat Tire">Flat Tire</option>
+                <option value="Battery Jump">Battery Jump</option>
+                <option value="Towing">Towing Required</option>
+                <option value="Out of Fuel">Out of Fuel</option>
+            </select>
+
+            <label>GPS Location</label>
+            <input type="text" class="input-field" id="locationInput" value="Fetching satellite position..." readonly>
+
+            <label>Priority</label>
+            <select class="input-field" id="prioritySelect">
+                <option value="NORMAL">Normal</option>
+                <option value="CRITICAL">Critical Emergency</option>
+            </select>
+
+            <button class="btn btn-primary" onclick="submitRequest()">Continue to Confirmation →</button>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/offline.js"></script>
+    <script>
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                document.getElementById('locationInput').value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+            },
+            () => {
+                document.getElementById('locationInput').value = "11.0168, 76.9558 (Default GPS)";
+            }
+        );
+
+        async function submitRequest() {
+            const payload = {
+                vehicle_id: document.getElementById('vehicleSelect').value,
+                issue: document.getElementById('issueSelect').value,
+                location: document.getElementById('locationInput').value,
+                priority: document.getElementById('prioritySelect').value
+            };
+
+            const res = await API.post('/tickets', payload);
+            window.location.href = "confirm.html";
+        }
+    </script>
+</body>
+
+</html>

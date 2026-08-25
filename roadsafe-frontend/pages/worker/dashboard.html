@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Shop Dashboard</span>
+            <div>
+                <label for="availToggle">Online</label>
+                <input type="checkbox" id="availToggle" checked onchange="toggleStatus(this)">
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="card" style="border-left: 5px solid var(--danger-red);">
+                <span class="badge badge-danger">CRITICAL ASSISTANCE</span>
+                <h4 style="margin-top: 5px;">Flat Tire - Honda City</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Customer: Sarah J. | 2.4 km away</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Location: NH-44, Marker 112</p>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="window.location.href='active-job.html'">Accept Job</button>
+                    <button class="btn btn-outline">Decline</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Performance Overview</h3>
+                <p style="font-size: 0.85rem;">Average Rating: 4.9 ★ (No personal customer details shown)</p>
+                <p style="font-size: 0.85rem;">Total Orders This Week: 14</p>
+                <p style="font-size: 0.85rem;">Revenue This Week: $680.00</p>
+                <p style="font-size: 0.85rem;">Avg Response Time: 11 mins</p>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="dashboard.html" class="nav-item active"><span>🛠️</span>Jobs</a>
+            <a href="job-history.html" class="nav-item"><span>📜</span>History</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span>Alerts</a>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script>
+        async function toggleStatus(cb) {
+            await API.patch('/responders/availability', { is_available: cb.checked });
+        }
+    </script>
+</body>
+
+</html>

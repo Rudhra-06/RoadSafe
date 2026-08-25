@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Parts & Billing</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Job Finalization</span>
+        </div>
+
+        <div class="content-body">
+            <h3>Parts & Services Used</h3>
+
+            <div id="itemsContainer" style="margin-top: 15px;">
+                <div class="card">
+                    <input type="text" class="input-field" value="Heavy Duty Tube Patch" placeholder="Item Name">
+                    <input type="number" class="input-field" value="25.00" placeholder="Cost ($)">
+                </div>
+            </div>
+
+            <button class="btn btn-outline" style="margin-bottom: 15px;" onclick="addItem()">+ Add Another Item</button>
+
+            <div class="card">
+                <p>Labor Service Charge: $45.00</p>
+                <p>Applicable Tax (5%): $3.50</p>
+                <hr style="margin: 10px 0;">
+                <h4>Calculated Total: $73.50</h4>
+            </div>
+
+            <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Submit Invoice to
+                Customer</button>
+        </div>
+    </div>
+
+    <script>
+        function addItem() {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+        <input type="text" class="input-field" placeholder="Item Name">
+        <input type="number" class="input-field" placeholder="Cost ($)">
+      `;
+            document.getElementById('itemsContainer').appendChild(div);
+        }
+    </script>
+</body>
+
+</html>
