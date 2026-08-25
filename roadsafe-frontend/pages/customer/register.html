@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Registration</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Create Account</span>
+        </div>
+
+        <div class="content-body">
+            <form id="customerRegisterForm" onsubmit="handleRegistration(event)">
+                <label>Full Name</label>
+                <input type="text" class="input-field" id="fullName" placeholder="Jane Doe" required>
+
+                <label>Email Address</label>
+                <input type="email" class="input-field" id="email" placeholder="jane@example.com" required>
+
+                <label>Phone Number</label>
+                <input type="tel" class="input-field" id="phone" placeholder="+1 (555) 000-0000" required>
+
+                <label>Password</label>
+                <input type="password" class="input-field" id="password" placeholder="••••••••" required>
+
+                <h4 style="margin: 15px 0 10px 0;">Primary Vehicle Details</h4>
+
+                <input type="text" class="input-field" id="vehicleModel"
+                    placeholder="Vehicle Make & Model (e.g., Toyota Camry)">
+                <input type="text" class="input-field" id="licensePlate"
+                    placeholder="License Plate Number (e.g., ABC-1234)">
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Complete Registration</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.85rem;">
+                <p>Already have an account? <a href="login.html" style="color: var(--primary-teal);">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        async function handleRegistration(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                vehicle: {
+                    model: document.getElementById('vehicleModel').value,
+                    plate: document.getElementById('licensePlate').value
+                },
+                role: 'CUSTOMER'
+            };
+
+            try {
+                await Auth.register(payload);
+                alert('Account created successfully!');
+                window.location.href = 'login.html';
+            } catch (err) {
+                alert('Registration failed. Please try again.');
+            }
+        }
+    </script>
+</body>
+
+</html>
