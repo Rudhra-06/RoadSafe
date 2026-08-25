@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import auth, users
+from app.routers import auth, users, responders, tickets, websocket
 
 
 @asynccontextmanager
@@ -29,6 +29,9 @@ if settings.BACKEND_CORS_ORIGINS:
 # Include Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(users.router, prefix=settings.API_V1_STR)
+app.include_router(responders.router, prefix=settings.API_V1_STR)
+app.include_router(tickets.router, prefix=settings.API_V1_STR)
+app.include_router(websocket.router)
 
 
 @app.get("/health", tags=["Health"])
