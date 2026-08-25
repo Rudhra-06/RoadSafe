@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
-from jose import jwt
+from typing import Optional, Any
+from jose import jwt, JOSEError
 from passlib.context import CryptContext
+from fastapi import HTTPException, status
+
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -21,10 +23,21 @@ def create_access_token(subject: str, role: str, expires_delta: Optional[timedel
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode: Dict[str, Any] = {
-        "exp": expire,
+    to_encode = {
         "sub": str(subject),
-        "role": str(role)
+        "role": str(role),
+        "exp": expire
     }
-    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict[str, Any]:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        return payload
+    except JOSEError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
