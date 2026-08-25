@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>System Complaints & Alerts</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body style="align-items: flex-start;">
+    <div class="desktop-container">
+        <div style="width: 250px; background: var(--primary-dark); color: white; padding: 20px;">
+            <h2>RoadSafe ERP</h2>
+        </div>
+
+        <div style="flex: 1; padding: 30px;">
+            <h1>Worker Complaints & Shop Owner Feedbacks</h1>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>Active Complaints Raised Against Workers</h3>
+                <div style="margin-top: 15px;">
+                    <div class="card" style="background: #fff5f5; border-color: #feb2b2;">
+                        <p><strong>Complainant:</strong> Customer #8821</p>
+                        <p><strong>Target Worker:</strong> Mike T. (Shop: Rapid Service LLC)</p>
+                        <p><strong>Issue:</strong> Overcharging for basic tire patch and prolonged delay.</p>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-danger" style="width: auto;"
+                                onclick="alert('Worker suspended & notification sent to worker and shop owner.')">Suspend
+                                Worker</button>
+                            <button class="btn btn-outline" style="width: auto;">Dismiss Complaint</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

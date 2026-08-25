@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Operations - Admin ERP</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body style="align-items: flex-start;">
+    <div class="desktop-container">
+        <div style="width: 250px; background: var(--primary-dark); color: white; padding: 20px;">
+            <h2>RoadSafe ERP</h2>
+            <div style="margin-top: 30px; display:flex; flex-direction:column; gap: 15px;">
+                <a href="dashboard.html" style="color:#94a3b8; text-decoration:none;">📊 Executive Dashboard</a>
+                <a href="tickets.html" style="color:white; text-decoration:none;">🎫 Ticket Operations</a>
+                <a href="mechanics.html" style="color:#94a3b8; text-decoration:none;">🔧 Responder Fleet</a>
+                <a href="user-management.html" style="color:#94a3b8; text-decoration:none;">👥 User Governance</a>
+            </div>
+        </div>
+
+        <div style="flex: 1; padding: 30px;">
+            <h1>Assistance Ticket Lifecycle Management</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Monitor, dispatch, and override operational
+                tickets across all regions.</p>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid var(--border-light);">
+                            <th style="padding: 10px;">Ticket ID</th>
+                            <th>Customer</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Assigned Responder</th>
+                            <th>Status</th>
+                            <th>Manual Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketTableBody">
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td style="padding: 10px;">#TK-9021</td>
+                            <td>Sarah J.</td>
+                            <td>Flat Tire Repair</td>
+                            <td><span class="badge badge-danger">CRITICAL</span></td>
+                            <td>Mike T. (Rapid Service)</td>
+                            <td><span class="badge badge-success">IN_SERVICE</span></td>
+                            <td>
+                                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;"
+                                    onclick="reassignTicket('TK-9021')">Reassign</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script>
+        async function reassignTicket(ticketId) {
+            const responderId = prompt("Enter replacement Responder ID:");
+            if (responderId) {
+                await API.post(`/tickets/${ticketId}/assign`, { responder_id: responderId });
+                alert("Dispatch manual override executed.");
+            }
+        }
+    </script>
+</body>
+
+</html>

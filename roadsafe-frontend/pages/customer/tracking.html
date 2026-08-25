@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Responder</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .map-container {
+            width: 100%;
+            height: 260px;
+            background: #e2e8f0;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .map-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(var(--text-secondary) 1px, transparent 0);
+            background-size: 16px 16px;
+            opacity: 0.15;
+        }
+
+        .pulse-dot {
+            width: 14px;
+            height: 14px;
+            background: var(--primary-teal);
+            border-radius: 50%;
+            box-shadow: 0 0 0 6px rgba(0, 102, 82, 0.2);
+            z-index: 2;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 20px;
+            margin-top: 15px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            background: var(--border-light);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .timeline-item.active::before {
+            background: var(--primary-teal);
+            box-shadow: 0 0 0 3px rgba(0, 102, 82, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Live Dispatch Tracking</span>
+            <span class="badge badge-success" id="etaBadge">ETA: 8 mins</span>
+        </div>
+
+        <div class="content-body">
+            <!-- Simulated GPS Tracking Canvas -->
+            <div class="map-container">
+                <div class="map-grid"></div>
+                <div class="pulse-dot"></div>
+                <small style="z-index: 2; margin-top: 10px; color: var(--text-primary); font-weight: 600;">GPS Position
+                    Broadcast Active</small>
+            </div>
+
+            <!-- Responder Card -->
+            <div class="card" style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h4 id="responderName">Mike T. (Mechanic)</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Rapid Service LLC • 4.9 ★</p>
+                    <small style="color: var(--primary-teal);">Vehicle: Heavy Duty Service Truck</small>
+                </div>
+                <a href="tel:5550192" class="btn btn-outline"
+                    style="width: auto; padding: 8px 12px; font-size: 0.8rem;">📞 Call</a>
+            </div>
+
+            <!-- Request Progress Log -->
+            <div class="card">
+                <h3>Dispatch Progress</h3>
+                <div class="timeline">
+                    <div class="timeline-item active">Assistance Requested</div>
+                    <div class="timeline-item active">Responder Dispatched</div>
+                    <div class="timeline-item active" id="stepEnRoute">Responder En Route</div>
+                    <div class="timeline-item" id="stepArrived">Arrived at Location</div>
+                    <div class="timeline-item" id="stepService">Service In Progress</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="home.html" class="nav-item"><span>🏠</span>Home</a>
+            <a href="history.html" class="nav-item active"><span>📋</span>Activity</a>
+            <a href="notifications.html" class="nav-item"><span>🔔</span>Alerts</a>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/ws.js"></script>
+    <script>
+        // Initialize real-time WebSocket connection for ticket state shifts
+        WSManager.connect("ticket_001", (data) => {
+            if (data.status === "ARRIVED") {
+                document.getElementById('stepArrived').classList.add('active');
+                document.getElementById('etaBadge').textContent = "Arrived";
+            } else if (data.status === "IN_SERVICE") {
+                document.getElementById('stepService').classList.add('active');
+            } else if (data.status === "COMPLETED") {
+                window.location.href = "completion.html";
+            }
+        });
+    </script>
+</body>
+
+</html>

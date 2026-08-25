@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Review</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-size: 2rem;
+            cursor: pointer;
+            margin: 15px 0;
+        }
+
+        .star {
+            color: var(--border-light);
+        }
+
+        .star.selected {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Feedback & Rating</span>
+        </div>
+
+        <div class="content-body">
+            <div class="card" style="text-align: center; padding: 20px 16px;">
+                <h3>Rate Your Experience</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Your feedback ensures
+                    platform safety and efficiency.</p>
+
+                <div class="star-rating" id="starContainer">
+                    <span class="star" onclick="setRating(1)">★</span>
+                    <span class="star" onclick="setRating(2)">★</span>
+                    <span class="star" onclick="setRating(3)">★</span>
+                    <span class="star" onclick="setRating(4)">★</span>
+                    <span class="star" onclick="setRating(5)">★</span>
+                </div>
+
+                <textarea class="input-field" id="feedbackText" rows="4"
+                    placeholder="Share specific details about the service provided..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="submitReview()">Submit Feedback</button>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script>
+        let currentRating = 5;
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((s, idx) => {
+                if (idx < rating) s.classList.add('selected');
+                else s.classList.remove('selected');
+            });
+        }
+        setRating(5); // Default rating initialization
+
+        async function submitReview() {
+            await API.post('/reviews', {
+                ticket_id: "ticket_001",
+                rating: currentRating,
+                feedback: document.getElementById('feedbackText').value
+            });
+            alert("Thank you for your rating!");
+            window.location.href = "home.html";
+        }
+    </script>
+</body>
+
+</html>

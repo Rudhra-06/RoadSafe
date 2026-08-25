@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settle Payment</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div class="pwa-container">
+        <div class="header">
+            <span class="header-title">Invoice Payment</span>
+        </div>
+
+        <div class="content-body">
+            <div class="card" style="text-align: center; padding: 24px 16px;">
+                <small style="color: var(--text-secondary);">Total Payable Amount</small>
+                <h1 style="color: var(--primary-dark); font-size: 2.2rem; margin: 8px 0;">$73.50</h1>
+                <span class="badge badge-danger">Payment Pending</span>
+            </div>
+
+            <div class="card">
+                <h3>Invoice Breakdown (#INV-8832)</h3>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 10px;">
+                    <span>Flat Tire Repair & Patch</span>
+                    <span>$45.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 6px;">
+                    <span>Heavy Duty Tube Patch (x2)</span>
+                    <span>$25.00</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 6px; color: var(--text-secondary);">
+                    <span>Taxes & Service Fees (5%)</span>
+                    <span>$3.50</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Select Payment Method</h3>
+                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                        <input type="radio" name="paymethod" value="CARD" checked> Online Card / UPI / Digital Wallet
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                        <input type="radio" name="paymethod" value="COD"> Cash on Delivery (Direct to Responder)
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="processPayment()">Execute Payment →</button>
+        </div>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script>
+        async function processPayment() {
+            const method = document.querySelector('input[name="paymethod"]:checked').value;
+            const res = await API.post('/payments', {
+                ticket_id: "ticket_001",
+                amount: 73.50,
+                payment_method: method
+            });
+
+            alert("Payment processed successfully!");
+            window.location.href = "review.html";
+        }
+    </script>
+</body>
+
+</html>

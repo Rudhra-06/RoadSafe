@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User Governance - Admin ERP</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body style="align-items: flex-start;">
+    <div class="desktop-container">
+        <div style="width: 250px; background: var(--primary-dark); color: white; padding: 20px;">
+            <h2>RoadSafe ERP</h2>
+            <div style="margin-top: 30px; display:flex; flex-direction:column; gap: 15px;">
+                <a href="dashboard.html" style="color:#94a3b8; text-decoration:none;">📊 Executive Dashboard</a>
+                <a href="user-management.html" style="color:white; text-decoration:none;">👥 User Governance</a>
+            </div>
+        </div>
+
+        <div style="flex: 1; padding: 30px;">
+            <h1>User & Worker Governance</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Manage suspensions, abusive accounts, and
+                reactivation.</p>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid var(--border-light);">
+                            <th style="padding: 8px;">User / Mechanic Details</th>
+                            <th>Complaints Lodged</th>
+                            <th>Location</th>
+                            <th>Reviews</th>
+                            <th>Account Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td style="padding: 8px;">Alex Smith (Worker)</td>
+                            <td>3 Complaints</td>
+                            <td>Coimbatore</td>
+                            <td>2.1 ★</td>
+                            <td><span class="badge badge-danger">Suspended</span></td>
+                            <td>
+                                <button class="btn btn-outline" style="padding: 4px 8px; font-size:0.8rem;"
+                                    onclick="alert('Notification sent to both parties.')">Reactivate Account</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">John Doe (Customer)</td>
+                            <td>0 Complaints</td>
+                            <td>Pollachi</td>
+                            <td>5.0 ★</td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>
+                                <button class="btn btn-danger" style="padding: 4px 8px; font-size:0.8rem;"
+                                    onclick="alert('Account suspended.')">Suspend Account</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
