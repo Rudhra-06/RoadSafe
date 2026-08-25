@@ -3,7 +3,8 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.responder import Responder, ResponderLocation
+from app.models.responder import Responder
+from app.models.responder_location import ResponderLocation
 from app.models.ticket import Ticket
 from app.models.ticket_assignment import TicketAssignment, AssignmentStatus
 from app.utils.distance import haversine_distance

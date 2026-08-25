@@ -1,4 +1,5 @@
-from app.db.database import Base
+from app.db.base import Base
+
 from app.models.user import User
 from app.models.responder import Responder
 from app.models.responder_skill import ResponderSkill
@@ -7,6 +8,9 @@ from app.models.ticket import Ticket
 from app.models.ticket_assignment import TicketAssignment
 from app.models.ticket_status_log import TicketStatusLog
 from app.models.idempotency import IdempotencyRecord
+
+from app.models.service_catalog import Service
+from app.models.parts_catalog import Part
 
 __all__ = [
     "Base",
@@ -18,4 +22,6 @@ __all__ = [
     "TicketAssignment",
     "TicketStatusLog",
     "IdempotencyRecord",
+    "Service",
+    "Part",
 ]
