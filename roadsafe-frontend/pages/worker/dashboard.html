@@ -19,15 +19,15 @@
         </div>
 
         <div class="content-body">
-            <div class="card" style="border-left: 5px solid var(--danger-red);">
+            <div class="card" id="assignmentCard" style="border-left: 5px solid var(--danger-red);">
                 <span class="badge badge-danger">CRITICAL ASSISTANCE</span>
                 <h4 style="margin-top: 5px;">Flat Tire - Honda City</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary);">Customer: Sarah J. | 2.4 km away</p>
                 <p style="font-size: 0.85rem; color: var(--text-secondary);">Location: NH-44, Marker 112</p>
 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn btn-primary" onclick="window.location.href='active-job.html'">Accept Job</button>
-                    <button class="btn btn-outline">Decline</button>
+                    <button class="btn btn-primary" onclick="respondToJob(true)">Accept Job</button>
+                    <button class="btn btn-outline" onclick="respondToJob(false)">Decline</button>
                 </div>
             </div>
 
@@ -51,8 +51,39 @@
     <script src="../../js/api.js"></script>
     <script>
         async function toggleStatus(cb) {
-            await API.patch('/responders/availability', { is_available: cb.checked });
+            try {
+                await API.patch('/responders/availability', { is_available: cb.checked, is_online: cb.checked });
+            } catch (err) {
+                cb.checked = !cb.checked;
+                alert(err.message || 'Unable to update availability.');
+            }
         }
+
+        let offeredTicket;
+        async function loadAssignment() {
+            try {
+                const tickets = await API.get('/tickets');
+                offeredTicket = tickets.find(ticket => ticket.assignments.some(a => a.status === 'OFFERED'));
+                if (!offeredTicket) {
+                    document.getElementById('assignmentCard').style.display = 'none';
+                    return;
+                }
+                document.querySelector('#assignmentCard h4').textContent = `${offeredTicket.description} - ${offeredTicket.vehicle_type}`;
+                document.querySelector('#assignmentCard .badge').textContent = offeredTicket.priority;
+            } catch (err) { console.error(err); }
+        }
+
+        async function respondToJob(accepted) {
+            if (!offeredTicket) return;
+            try {
+                await API.post(`/tickets/${offeredTicket.id}/assignment/respond`, { accepted });
+                if (accepted) {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID, offeredTicket.id);
+                    window.location.href = 'active-job.html';
+                } else loadAssignment();
+            } catch (err) { alert(err.message || 'Unable to update assignment.'); }
+        }
+        loadAssignment();
     </script>
 </body>
 

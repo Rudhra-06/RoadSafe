@@ -12,36 +12,36 @@ from app.utils.distance import haversine_distance
 
 class DispatchService:
     @staticmethod
-    async def match_and_assign(db: AsyncSession, ticket: Ticket) -> Optional[TicketAssignment]:
-        # Fetch active & online responders for requested service
+    async def find_best_responder(db: AsyncSession, ticket: Ticket):
+        """Return the best eligible responder and its score without creating an assignment."""
         stmt = (
             select(Responder, ResponderLocation)
             .join(ResponderLocation, Responder.id == ResponderLocation.responder_id)
             .where(
                 Responder.type == ticket.service_type,
                 Responder.is_available == True,
-                Responder.is_online == True
+                Responder.is_online == True,
             )
         )
         result = await db.execute(stmt)
         candidates = result.all()
-
         if not candidates:
             return None
 
-        scored_candidates = []
-        for responder, location in candidates:
-            dist = haversine_distance(
-                ticket.latitude, ticket.longitude,
-                location.latitude, location.longitude
-            )
-            # Prevent Division By Zero: Floor distance at 100 meters (0.1 km)
-            effective_dist = max(dist, 0.1)
-            score = 100.0 / effective_dist
-            scored_candidates.append((responder, score))
+        scored = [
+            (responder, 100.0 / max(haversine_distance(
+                ticket.latitude, ticket.longitude, location.latitude, location.longitude
+            ), 0.1))
+            for responder, location in candidates
+        ]
+        return max(scored, key=lambda candidate: candidate[1])
 
-        scored_candidates.sort(key=lambda x: x[1], reverse=True)
-        best_responder, best_score = scored_candidates[0]
+    @staticmethod
+    async def match_and_assign(db: AsyncSession, ticket: Ticket) -> Optional[TicketAssignment]:
+        match = await DispatchService.find_best_responder(db, ticket)
+        if not match:
+            return None
+        best_responder, best_score = match
 
         assignment = TicketAssignment(
             ticket_id=ticket.id,

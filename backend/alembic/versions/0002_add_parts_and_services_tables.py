@@ -1,7 +1,7 @@
 """add_parts_and_services_tables
 
 Revision ID: 0002_parts_services
-Revises: 0001_initial
+Revises: 0001
 Create Date: 2026-08-25 12:00:00.000000
 
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = '0002_parts_services'
-down_revision = '0001_initial'
+down_revision = '0001'
 branch_labels = None
 depends_on = None
 

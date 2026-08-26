@@ -9,6 +9,7 @@ from app.schemas.ticket import (
     TicketRead,
     TicketStatusUpdate,
     TicketAssignRequest,
+    AssignmentDecision,
     AssignmentRead
 )
 from app.services.ticket_service import TicketService
@@ -18,6 +19,16 @@ router = APIRouter(prefix="/tickets", tags=["Tickets"])
 
 customer_or_staff = RoleChecker([UserRole.CUSTOMER, UserRole.MANAGER, UserRole.ADMIN])
 manager_or_admin = RoleChecker([UserRole.MANAGER, UserRole.ADMIN])
+responder_only = RoleChecker([UserRole.RESPONDER])
+
+
+@router.get("", response_model=list[TicketRead])
+async def list_tickets(
+    claims: dict = Depends(get_current_user_claims),
+    db: AsyncSession = Depends(get_db),
+):
+    """List tickets visible to the signed-in customer, responder, manager, or admin."""
+    return await TicketService.list_tickets_for_user(db, claims["user_id"], claims["role"])
 
 
 @router.post("", response_model=TicketCreateResponse, status_code=status.HTTP_201_CREATED)
@@ -61,6 +72,17 @@ async def update_ticket_status(
         db, ticket_id, status_update.status, user_id, status_update.reason
     )
     return updated_ticket
+
+
+@router.post("/{ticket_id}/assignment/respond", response_model=AssignmentRead, dependencies=[Depends(responder_only)])
+async def respond_to_assignment(
+    ticket_id: str,
+    decision: AssignmentDecision,
+    claims: dict = Depends(get_current_user_claims),
+    db: AsyncSession = Depends(get_db),
+):
+    """Accept or reject the logged-in responder's offered assignment."""
+    return await TicketService.respond_to_assignment(db, ticket_id, claims["user_id"], decision.accepted)
 
 
 @router.post("/{ticket_id}/assign", response_model=AssignmentRead, dependencies=[Depends(manager_or_admin)])

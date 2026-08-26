@@ -49,7 +49,7 @@ VALID_TICKET_TRANSITIONS = {
     TicketStatus.IN_SERVICE: {TicketStatus.COMPLETED, TicketStatus.FAILED},
     TicketStatus.COMPLETED: set(),
     TicketStatus.CANCELLED: set(),
-    TicketStatus.NO_RESPONDER: {TicketStatus.DISPATCHING},
+    TicketStatus.NO_RESPONDER: {TicketStatus.DISPATCHING, TicketStatus.REASSIGN},
     TicketStatus.REASSIGN: {TicketStatus.DISPATCHING},
     TicketStatus.FAILED: set(),
 }

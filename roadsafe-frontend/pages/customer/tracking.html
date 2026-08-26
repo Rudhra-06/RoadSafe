@@ -127,19 +127,26 @@
     </div>
 
     <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
     <script src="../../js/ws.js"></script>
     <script>
-        // Initialize real-time WebSocket connection for ticket state shifts
-        WSManager.connect("ticket_001", (data) => {
-            if (data.status === "ARRIVED") {
+        const activeTicketId = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+        function renderStatus(status) {
+            if (status === "ARRIVED") {
                 document.getElementById('stepArrived').classList.add('active');
                 document.getElementById('etaBadge').textContent = "Arrived";
-            } else if (data.status === "IN_SERVICE") {
+            } else if (status === "IN_SERVICE") {
                 document.getElementById('stepService').classList.add('active');
-            } else if (data.status === "COMPLETED") {
+            } else if (status === "COMPLETED") {
                 window.location.href = "completion.html";
             }
-        });
+        }
+        if (activeTicketId) {
+            API.get(`/tickets/${activeTicketId}`).then(ticket => renderStatus(ticket.status)).catch(console.error);
+            WSManager.connect(`tickets/${activeTicketId}`, data => renderStatus(data.new_status));
+        } else {
+            window.location.href = "request.html";
+        }
     </script>
 </body>
 

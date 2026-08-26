@@ -46,6 +46,6 @@ class Ticket(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    customer = relationship("User", back_populates="tickets")
+    customer = relationship("User", back_populates="customer_tickets")
     assignments = relationship("TicketAssignment", back_populates="ticket", cascade="all, delete-orphan")
     status_logs = relationship("TicketStatusLog", back_populates="ticket", cascade="all, delete-orphan")

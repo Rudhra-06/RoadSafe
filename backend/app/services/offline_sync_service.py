@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,6 +10,8 @@ from app.services.location_service import LocationService
 from app.services.ticket_service import TicketService
 from app.services.responder_service import ResponderService
 from app.utils.enums import TicketStatus
+
+logger = logging.getLogger(__name__)
 
 
 class OfflineSyncService:
@@ -70,6 +73,7 @@ class OfflineSyncService:
                 )
 
             except Exception as e:
+                logger.exception("Offline action failed: %s", item.action_type)
                 failed_count += 1
                 results.append(
                     OfflineActionResult(
@@ -98,7 +102,7 @@ class OfflineSyncService:
                 longitude=payload["longitude"]
             )
             location_res = await LocationService.update_responder_location(db, responder.id, loc_in)
-            return location_res.model_dump()
+            return location_res.model_dump(mode="json")
 
         elif action_type == "STATUS_UPDATE":
             ticket_id = payload["ticket_id"]

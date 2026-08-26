@@ -56,15 +56,34 @@
         );
 
         async function submitRequest() {
+            const [latitude, longitude] = document.getElementById('locationInput').value
+                .split(',').map(value => Number(value.trim()));
+            const issue = document.getElementById('issueSelect').value;
+            const serviceTypes = {
+                'Flat Tire': 'CAR_MECHANIC',
+                'Battery Jump': 'ROADSIDE_TECHNICIAN',
+                'Towing': 'TOWING_OPERATOR',
+                'Out of Fuel': 'ROADSIDE_TECHNICIAN'
+            };
             const payload = {
-                vehicle_id: document.getElementById('vehicleSelect').value,
-                issue: document.getElementById('issueSelect').value,
-                location: document.getElementById('locationInput').value,
-                priority: document.getElementById('prioritySelect').value
+                vehicle_type: document.getElementById('vehicleSelect').selectedOptions[0].text,
+                service_type: serviceTypes[issue],
+                description: issue,
+                latitude,
+                longitude,
+                priority: document.getElementById('prioritySelect').value === 'CRITICAL' ? 'EMERGENCY' : 'MEDIUM',
+                contact_phone: Auth.getUser()?.phone_number || null
             };
 
-            const res = await API.post('/tickets', payload);
-            window.location.href = "confirm.html";
+            try {
+                const res = await API.post('/tickets', payload);
+                if (res.ticket?.id) {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID, res.ticket.id);
+                    window.location.href = "confirm.html";
+                }
+            } catch (err) {
+                alert(err.message || 'Unable to submit your assistance request.');
+            }
         }
     </script>
 </body>

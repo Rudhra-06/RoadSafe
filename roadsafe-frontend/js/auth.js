@@ -1,9 +1,12 @@
 const Auth = {
     async login(credentials) {
         try {
-            const data = await API.post("/auth/login", credentials);
-            if (data.token) {
-                localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN, data.token);
+            const data = await API.formPost("/auth/login", {
+                username: credentials.email,
+                password: credentials.password
+            });
+            if (data.access_token) {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN, data.access_token);
                 localStorage.setItem(CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(data.user));
                 this.redirectUser(data.user.role);
             }
@@ -34,7 +37,7 @@ const Auth = {
             case "ADMIN":
                 window.location.href = "/pages/admin/dashboard.html";
                 break;
-            case "WORKER":
+            case "RESPONDER":
                 window.location.href = "/pages/worker/dashboard.html";
                 break;
             default:

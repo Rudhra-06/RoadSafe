@@ -39,11 +39,10 @@
                 await Auth.login({
                     email: document.getElementById('workerId').value,
                     password: document.getElementById('password').value,
-                    role: 'WORKER'
+                    role: 'RESPONDER'
                 });
             } catch (err) {
-                // Fallback for demo navigation
-                window.location.href = "dashboard.html";
+                alert(err.message || 'Unable to sign in.');
             }
         }
     </script>

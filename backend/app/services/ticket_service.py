@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -10,6 +10,7 @@ from app.models.ticket_status_log import TicketStatusLog
 from app.models.responder import Responder
 from app.schemas.ticket import TicketCreate, TicketCreateResponse, TicketRead
 from app.services.dispatch_service import DispatchService
+from app.services.responder_service import ResponderService
 from app.utils.enums import (
     TicketStatus,
     AssignmentStatus,
@@ -19,6 +20,18 @@ from app.websocket.manager import ws_manager
 
 
 class TicketService:
+    @staticmethod
+    async def list_tickets_for_user(db: AsyncSession, user_id: str, role: str) -> List[Ticket]:
+        query = select(Ticket).options(
+            selectinload(Ticket.assignments), selectinload(Ticket.status_logs)
+        ).order_by(Ticket.created_at.desc())
+        if role == "CUSTOMER":
+            query = query.filter(Ticket.customer_id == user_id)
+        elif role == "RESPONDER":
+            query = query.join(TicketAssignment).join(Responder).filter(Responder.user_id == user_id)
+        result = await db.execute(query)
+        return result.scalars().unique().all()
+
     @staticmethod
     async def create_ticket(
         db: AsyncSession, customer_id: str, ticket_in: TicketCreate
@@ -169,6 +182,31 @@ class TicketService:
             }
         )
 
+        return assignment
+
+    @staticmethod
+    async def respond_to_assignment(
+        db: AsyncSession, ticket_id: str, responder_user_id: str, accepted: bool
+    ) -> TicketAssignment:
+        ticket = await TicketService.get_ticket_by_id(db, ticket_id)
+        responder = await ResponderService.get_responder_by_user_id(db, responder_user_id)
+        result = await db.execute(select(TicketAssignment).filter(
+            TicketAssignment.ticket_id == ticket_id,
+            TicketAssignment.responder_id == responder.id,
+            TicketAssignment.status == AssignmentStatus.OFFERED,
+        ))
+        assignment = result.scalars().first()
+        if not assignment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No offered assignment found")
+        assignment.status = AssignmentStatus.ACCEPTED if accepted else AssignmentStatus.REJECTED
+        await db.commit()
+        await db.refresh(assignment)
+        await TicketService._transition_status(
+            db, ticket,
+            TicketStatus.ACCEPTED if accepted else TicketStatus.REASSIGN,
+            responder_user_id,
+            "Responder accepted assignment" if accepted else "Responder rejected assignment",
+        )
         return assignment
 
     @staticmethod

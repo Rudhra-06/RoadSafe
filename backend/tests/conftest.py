@@ -1,5 +1,6 @@
 import pytest
 import pytest_asyncio
+from uuid import uuid4
 from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -38,3 +39,28 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+async def _register_and_login(client: AsyncClient, role: str) -> dict:
+    email = f"{role.lower()}-{uuid4().hex}@example.com"
+    response = await client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "Password123!",
+        "full_name": f"{role.title()} Test User",
+        "phone_number": "+15550000000",
+        "role": role,
+    })
+    assert response.status_code == 201
+    login = await client.post("/api/v1/auth/token", data={"username": email, "password": "Password123!"})
+    assert login.status_code == 200
+    return {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def admin_token_headers(client: AsyncClient) -> dict:
+    return await _register_and_login(client, "ADMIN")
+
+
+@pytest_asyncio.fixture
+async def customer_token_headers(client: AsyncClient) -> dict:
+    return await _register_and_login(client, "CUSTOMER")

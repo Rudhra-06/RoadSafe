@@ -15,9 +15,10 @@ const API = {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    window.location.href = "/pages/customer/login.html";
+                    if (typeof Auth !== "undefined") Auth.logout();
                 }
-                throw new Error(`API Error: ${response.statusText}`);
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.detail || `API Error: ${response.statusText}`);
             }
 
             return await response.json();
@@ -36,6 +37,14 @@ const API = {
 
     post(endpoint, body) {
         return this.request(endpoint, { method: "POST", body: JSON.stringify(body) });
+    },
+
+    formPost(endpoint, body) {
+        return this.request(endpoint, {
+            method: "POST",
+            body: new URLSearchParams(body).toString(),
+            headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
     },
 
     patch(endpoint, body) {

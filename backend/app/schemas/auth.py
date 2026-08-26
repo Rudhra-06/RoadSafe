@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 from app.utils.enums import UserRole
 
 
@@ -6,7 +6,11 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
     full_name: str = Field(..., min_length=2)
-    phone_number: str = Field(..., min_length=5)
+    phone_number: str = Field(
+        "",
+        validation_alias=AliasChoices("phone_number", "phone"),
+        min_length=0,
+    )
     role: UserRole = UserRole.CUSTOMER
 
 

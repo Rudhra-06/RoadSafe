@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.utils.enums import TicketStatus, TicketPriority, ResponderType, AssignmentStatus
 
 
@@ -13,6 +13,12 @@ class TicketCreate(BaseModel):
     priority: TicketPriority = TicketPriority.MEDIUM
     contact_phone: Optional[str] = None
 
+    @field_validator("service_type", mode="before")
+    @classmethod
+    def map_legacy_service_types(cls, value):
+        # Compatibility for existing clients that used the original label.
+        return {"TOW_TRUCK": "TOWING_OPERATOR"}.get(value, value)
+
 
 class TicketStatusUpdate(BaseModel):
     status: TicketStatus
@@ -21,6 +27,10 @@ class TicketStatusUpdate(BaseModel):
 
 class TicketAssignRequest(BaseModel):
     responder_id: str
+
+
+class AssignmentDecision(BaseModel):
+    accepted: bool
 
 
 class StatusLogRead(BaseModel):

@@ -51,14 +51,10 @@
         async function handleRegistration(e) {
             e.preventDefault();
             const payload = {
-                name: document.getElementById('fullName').value,
+                full_name: document.getElementById('fullName').value,
                 email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
+                phone_number: document.getElementById('phone').value,
                 password: document.getElementById('password').value,
-                vehicle: {
-                    model: document.getElementById('vehicleModel').value,
-                    plate: document.getElementById('licensePlate').value
-                },
                 role: 'CUSTOMER'
             };
 

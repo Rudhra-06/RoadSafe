@@ -35,8 +35,7 @@
                     role: 'ADMIN'
                 });
             } catch (err) {
-                // Fallback demo access
-                window.location.href = "dashboard.html";
+                alert(err.message || 'Unable to sign in.');
             }
         }
     </script>

@@ -22,6 +22,7 @@ async def register(user_in: UserRegister, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=LoginResponse)
+@router.post("/token", response_model=LoginResponse, include_in_schema=False)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)

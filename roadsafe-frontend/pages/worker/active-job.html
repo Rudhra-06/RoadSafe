@@ -50,8 +50,12 @@
     <script src="../../js/api.js"></script>
     <script>
         async function updateJobState(status) {
-            await API.patch('/tickets/ticket_001/status', { status });
-            alert(`Job state updated to: ${status}`);
+            const ticketId = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+            if (!ticketId) return alert('No active job selected.');
+            try {
+                await API.patch(`/tickets/${ticketId}/status`, { status });
+                alert(`Job state updated to: ${status}`);
+            } catch (err) { alert(err.message || 'Unable to update job state.'); }
         }
     </script>
 </body>
