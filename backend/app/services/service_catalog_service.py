@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.models.service_catalog import Service
+import json
 from app.schemas.service_catalog import ServiceCreate, ServiceUpdate
 
 
@@ -16,6 +17,10 @@ class ServiceCatalogService:
             description=payload.description,
             category=payload.category,
             base_price=payload.base_price,
+            estimated_duration_minutes=payload.estimated_duration_minutes,
+            features=json.dumps(payload.features),
+            included_items=json.dumps(payload.included_items),
+            possible_parts=json.dumps(payload.possible_parts),
             is_active=True
         )
         db.add(service)
@@ -52,6 +57,9 @@ class ServiceCatalogService:
     async def update_service(db: AsyncSession, service_id: str, payload: ServiceUpdate) -> Service:
         service = await ServiceCatalogService.get_service(db, service_id)
         update_data = payload.model_dump(exclude_unset=True)
+        for field in ("features", "included_items", "possible_parts"):
+            if field in update_data:
+                update_data[field] = json.dumps(update_data[field])
         for key, value in update_data.items():
             setattr(service, key, value)
         await db.commit()

@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Ensure the `backend/` directory is on sys.path so that `from app.xxx import ...`
+# works when Alembic runs env.py in its own subprocess context.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import pool

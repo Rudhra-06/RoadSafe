@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import auth, users, responders, tickets, websocket, offline, services, parts
+from app.routers import auth, users, responders, tickets, websocket, offline, services, parts, billing, reviews
 
 
 @asynccontextmanager
@@ -35,6 +35,8 @@ app.include_router(tickets.router, prefix=settings.API_V1_STR)
 app.include_router(offline.router, prefix=settings.API_V1_STR)
 app.include_router(services.router, prefix=settings.API_V1_STR)
 app.include_router(parts.router, prefix=settings.API_V1_STR)
+app.include_router(billing.router, prefix=settings.API_V1_STR)
+app.include_router(reviews.router, prefix=settings.API_V1_STR)
 app.include_router(websocket.router)
 
 

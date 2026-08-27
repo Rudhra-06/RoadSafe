@@ -10,9 +10,13 @@
         });
     }
 
-    // Automatic Auth Redirect Check
-    const currentUser = Auth.getUser();
-    if (currentUser && window.location.pathname === "/index.html") {
-        Auth.redirectUser(currentUser.role);
+    // Automatic Auth Redirect & Route Guard
+    if (typeof Auth !== 'undefined') {
+        Auth.guardRoute();
+        
+        const currentUser = Auth.getUser();
+        if (currentUser && window.location.pathname.endsWith("/index.html") || window.location.pathname === "/") {
+            Auth.redirectUser(currentUser.role);
+        }
     }
 })();

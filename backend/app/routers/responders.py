@@ -10,6 +10,7 @@ from app.schemas.responder import (
     ResponderLocationCreate,
     ResponderLocationRead,
     ResponderNearbyRead,
+    ResponderPublicRead,
     SkillCreate,
     SkillRead,
 )
@@ -41,6 +42,16 @@ async def get_nearby_responders(
         radius_km=radius_km,
         responder_type=responder_type,
     )
+
+
+@router.get("/me", response_model=ResponderRead, dependencies=[Depends(responder_only)])
+async def get_my_responder_profile(claims: dict = Depends(get_current_user_claims), db: AsyncSession = Depends(get_db)):
+    return await ResponderService.get_responder_by_user_id(db, claims["user_id"])
+
+
+@router.get("/{responder_id}", response_model=ResponderPublicRead, dependencies=[Depends(customer_or_staff)])
+async def get_provider(responder_id: str, db: AsyncSession = Depends(get_db)):
+    return await ResponderService.get_public_responder(db, responder_id)
 
 
 @router.patch("/availability", response_model=ResponderRead, dependencies=[Depends(responder_only)])

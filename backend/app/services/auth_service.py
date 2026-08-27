@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.models.user import User
 from app.models.responder import Responder
+from app.models.responder_skill import ResponderSkill
 from app.schemas.auth import UserRegister, LoginResponse, UserAuthResponse
 from app.utils.enums import UserRole, ResponderType
 
@@ -18,6 +19,13 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email address is already registered."
+            )
+
+        # SECURITY: Prevent public registration of Admin/Manager roles
+        if user_in.role in [UserRole.ADMIN, UserRole.MANAGER]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to register an administrative role via this endpoint."
             )
 
         hashed_pwd = get_password_hash(user_in.password)
@@ -36,11 +44,17 @@ class AuthService:
         if db_user.role == UserRole.RESPONDER:
             responder_profile = Responder(
                 user_id=db_user.id,
-                type=ResponderType.ROADSIDE_TECHNICIAN,
+                type=user_in.responder_type,
                 is_available=True,
-                is_online=False
+                is_online=False,
+                shop_name=user_in.shop_name,
+                shop_address=user_in.shop_address,
             )
             db.add(responder_profile)
+            await db.commit()
+            await db.refresh(responder_profile)
+            for skill_name in {skill.strip().upper() for skill in user_in.skills if skill.strip()}:
+                db.add(ResponderSkill(responder_id=responder_profile.id, skill_name=skill_name))
             await db.commit()
 
         return db_user

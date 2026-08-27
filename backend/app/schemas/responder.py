@@ -50,6 +50,8 @@ class ResponderRead(BaseModel):
     type: ResponderType
     is_available: bool
     is_online: bool
+    shop_name: Optional[str] = None
+    shop_address: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     skills: List[SkillRead] = []
@@ -67,3 +69,11 @@ class ResponderNearbyRead(BaseModel):
     longitude: float
     distance_km: float
     is_available: bool
+    full_name: str
+    shop_name: Optional[str] = None
+    shop_address: Optional[str] = None
+    skills: List[str] = []
+
+
+class ResponderPublicRead(ResponderNearbyRead):
+    phone_number: Optional[str] = None

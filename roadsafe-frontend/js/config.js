@@ -2,6 +2,11 @@ const CONFIG = {
     // A host page may define window.ROADSAFE_CONFIG before this script to override these values.
     API_BASE_URL: window.ROADSAFE_CONFIG?.API_BASE_URL || "http://localhost:8000/api/v1",
     WS_BASE_URL: window.ROADSAFE_CONFIG?.WS_BASE_URL || "ws://localhost:8000/ws",
+    MAP: {
+        // Set tileUrl and attribution from the host deployment when Leaflet is enabled.
+        tileUrl: window.ROADSAFE_CONFIG?.MAP?.tileUrl || null,
+        attribution: window.ROADSAFE_CONFIG?.MAP?.attribution || ""
+    },
     STORAGE_KEYS: {
         AUTH_TOKEN: "rs_token",
         USER_DATA: "rs_user",

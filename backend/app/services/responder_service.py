@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.models.responder import Responder
 from app.models.responder_skill import ResponderSkill
 from app.models.responder_location import ResponderLocation
+from app.models.user import User
 from app.schemas.responder import (
     ResponderRead,
     ResponderAvailabilityUpdate,
@@ -93,7 +94,7 @@ class ResponderService:
         Queries active and available responders, computes their distance using Haversine,
         and filters within the specified radius_km.
         """
-        query = select(Responder).filter(
+        query = select(Responder).options(selectinload(Responder.skills), selectinload(Responder.user)).filter(
             Responder.is_available == True,
             Responder.is_online == True,
         )
@@ -128,12 +129,31 @@ class ResponderService:
                         latitude=latest_loc.latitude,
                         longitude=latest_loc.longitude,
                         distance_km=dist,
-                        is_available=responder.is_available,
-                    )
+                    is_available=responder.is_available,
+                    full_name=responder.user.full_name,
+                    shop_name=responder.shop_name,
+                    shop_address=responder.shop_address,
+                    skills=[skill.skill_name for skill in responder.skills],
+                )
                 )
 
         nearby_responders.sort(key=lambda x: x.distance_km)
         return nearby_responders
+
+    @staticmethod
+    async def get_public_responder(db: AsyncSession, responder_id: str):
+        result = await db.execute(select(Responder).options(selectinload(Responder.skills), selectinload(Responder.locations), selectinload(Responder.user)).filter(Responder.id == responder_id))
+        responder = result.scalars().first()
+        if not responder:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Service provider not found")
+        latest = max(responder.locations, key=lambda item: item.created_at) if responder.locations else None
+        if not latest:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Provider location is unavailable")
+        from app.schemas.responder import ResponderPublicRead
+        return ResponderPublicRead(responder_id=responder.id, user_id=responder.user_id, type=responder.type,
+            latitude=latest.latitude, longitude=latest.longitude, distance_km=0, is_available=responder.is_available,
+            full_name=responder.user.full_name, shop_name=responder.shop_name, shop_address=responder.shop_address,
+            skills=[skill.skill_name for skill in responder.skills], phone_number=responder.user.phone_number)
 
     @staticmethod
     async def add_skill(

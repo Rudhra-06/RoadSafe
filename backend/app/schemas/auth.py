@@ -1,5 +1,6 @@
 from pydantic import AliasChoices, BaseModel, EmailStr, Field
-from app.utils.enums import UserRole
+from app.utils.enums import UserRole, ResponderType
+from typing import List, Optional
 
 
 class UserRegister(BaseModel):
@@ -12,6 +13,10 @@ class UserRegister(BaseModel):
         min_length=0,
     )
     role: UserRole = UserRole.CUSTOMER
+    responder_type: ResponderType = ResponderType.ROADSIDE_TECHNICIAN
+    skills: List[str] = []
+    shop_name: Optional[str] = Field(None, max_length=255)
+    shop_address: Optional[str] = None
 
 
 class Token(BaseModel):

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, ForeignKey
+from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.db.base import BaseModel
 from app.utils.enums import ResponderType
@@ -11,6 +11,8 @@ class Responder(BaseModel):
     type = Column(SQLEnum(ResponderType), nullable=False)
     is_available = Column(Boolean, default=True, nullable=False, index=True)
     is_online = Column(Boolean, default=False, nullable=False, index=True)
+    shop_name = Column(String(255), nullable=True)
+    shop_address = Column(Text, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="responder_profile")

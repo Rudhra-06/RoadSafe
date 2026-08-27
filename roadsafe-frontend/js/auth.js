@@ -33,15 +33,41 @@ const Auth = {
     },
 
     redirectUser(role) {
-        switch (role) {
-            case "ADMIN":
-                window.location.href = "/pages/admin/dashboard.html";
-                break;
-            case "RESPONDER":
-                window.location.href = "/pages/worker/dashboard.html";
-                break;
-            default:
-                window.location.href = "/pages/customer/home.html";
+        if (role === "ADMIN" || role === "MANAGER") {
+            window.location.href = "/pages/admin/dashboard.html";
+        } else if (role === "RESPONDER") {
+            window.location.href = "/pages/worker/dashboard.html";
+        } else {
+            window.location.href = "/pages/customer/home.html";
+        }
+    },
+
+    guardRoute() {
+        const path = window.location.pathname;
+        const user = this.getUser();
+
+        // Allow public pages (login pages, index)
+        const isPublic = path === "/" || path.endsWith("/index.html") || path.includes("/login.html") || path.includes("/register.html");
+        
+        if (!user && !isPublic) {
+            console.warn("Unauthorized access. Redirecting to login.");
+            this.logout();
+            return;
+        }
+
+        if (user && !isPublic) {
+            const role = user.role;
+            const isAdminPath = path.includes("/pages/admin/");
+            const isWorkerPath = path.includes("/pages/worker/");
+            const isCustomerPath = path.includes("/pages/customer/") && !path.includes("login") && !path.includes("register");
+
+            if (isAdminPath && role !== "ADMIN" && role !== "MANAGER") {
+                this.redirectUser(role);
+            } else if (isWorkerPath && role !== "RESPONDER") {
+                this.redirectUser(role);
+            } else if (isCustomerPath && role !== "CUSTOMER") {
+                this.redirectUser(role);
+            }
         }
     }
 };
