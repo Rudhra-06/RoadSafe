@@ -1,72 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Registration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Create your RoadSafe account to request roadside assistance.">
+    <title>Create Account — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        body { background: linear-gradient(160deg, #f5edf4 0%, #f7f8fa 60%); }
+        .reg-card {
+            background: var(--surface-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 28px 24px 32px;
+            width: 100%;
+            max-width: 420px;
+            margin: 24px auto;
+        }
+        .brand-logo {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--primary-teal), var(--accent-teal));
+            border-radius: var(--radius-lg);
+            display: grid; place-items: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 4px 14px rgba(113,75,103,.3);
+        }
+        .brand-logo svg { width: 28px; height: 28px; stroke: #fff; fill: none; }
+        .reg-title { text-align: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .reg-sub { text-align: center; font-size: .875rem; color: var(--text-secondary); margin-bottom: 24px; }
+        .input-wrap { margin-bottom: 16px; }
+        .input-wrap label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+        .input-wrap label .req { color: var(--danger-red); }
+        #errorBox { display: none; }
+    </style>
 </head>
-
 <body>
-    <div class="pwa-container">
-        <div class="header">
-            <span class="header-title">Create Account</span>
+<main style="width:100%; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding: 0 12px 40px;">
+    <div class="reg-card">
+        <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13V7m0 13l6-3m-6-10l6-3m0 13l5.447 2.724A1 1 0 0 0 21 19.382V8.618a1 1 0 0 0-.553-.894L15 5m0 12V5"/></svg>
         </div>
+        <h1 class="reg-title">Create Account</h1>
+        <p class="reg-sub">Join RoadSafe for on-demand roadside help</p>
 
-        <div class="content-body">
-            <form id="customerRegisterForm" onsubmit="handleRegistration(event)">
-                <label>Full Name</label>
-                <input type="text" class="input-field" id="fullName" placeholder="Jane Doe" required>
+        <div id="errorBox" class="alert alert-error" role="alert"></div>
+        <div id="successBox" style="display:none;" class="alert alert-success" role="alert"></div>
 
-                <label>Email Address</label>
-                <input type="email" class="input-field" id="email" placeholder="jane@example.com" required>
-
-                <label>Phone Number</label>
-                <input type="tel" class="input-field" id="phone" placeholder="+1 (555) 000-0000" required>
-
-                <label>Password</label>
-                <input type="password" class="input-field" id="password" placeholder="••••••••" required>
-
-                <h4 style="margin: 15px 0 10px 0;">Primary Vehicle Details</h4>
-
-                <input type="text" class="input-field" id="vehicleModel"
-                    placeholder="Vehicle Make & Model (e.g., Toyota Camry)">
-                <input type="text" class="input-field" id="licensePlate"
-                    placeholder="License Plate Number (e.g., ABC-1234)">
-
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Complete Registration</button>
-            </form>
-
-            <div style="text-align: center; margin-top: 20px; font-size: 0.85rem;">
-                <p>Already have an account? <a href="login.html" style="color: var(--primary-teal);">Sign In</a></p>
+        <form id="registerForm" novalidate>
+            <div class="input-wrap">
+                <label for="fullName">Full Name <span class="req">*</span></label>
+                <input type="text" class="input-field" id="fullName" name="full_name"
+                       placeholder="Jane Doe" required minlength="2" autocomplete="name">
+                <div class="field-error" id="nameErr" style="display:none;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span></span>
+                </div>
             </div>
+
+            <div class="input-wrap">
+                <label for="email">Email Address <span class="req">*</span></label>
+                <input type="email" class="input-field" id="email" name="email"
+                       placeholder="jane@example.com" required autocomplete="email">
+                <div class="field-error" id="emailErr" style="display:none;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="input-wrap">
+                <label for="phone">Phone Number</label>
+                <input type="tel" class="input-field" id="phone" name="phone_number"
+                       placeholder="+91 98765 43210" autocomplete="tel">
+            </div>
+
+            <div class="input-wrap">
+                <label for="password">Password <span class="req">*</span></label>
+                <input type="password" class="input-field" id="password" name="password"
+                       placeholder="At least 6 characters" required minlength="6" autocomplete="new-password">
+                <div class="field-error" id="passErr" style="display:none;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="input-wrap">
+                <label for="confirmPassword">Confirm Password <span class="req">*</span></label>
+                <input type="password" class="input-field" id="confirmPassword"
+                       placeholder="Re-enter password" required autocomplete="new-password">
+                <div class="field-error" id="confirmErr" style="display:none;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="margin-top:8px;">
+                Create Account
+            </button>
+        </form>
+
+        <div class="auth-links">
+            Already have an account? <a href="login.html">Sign In</a><br>
+            <span style="margin-top:6px; display:inline-block;">
+                Service Provider? <a href="../worker/register.html">Register as Worker</a>
+            </span>
         </div>
     </div>
+</main>
 
-    <script src="../../js/config.js"></script>
-    <script src="../../js/api.js"></script>
-    <script src="../../js/auth.js"></script>
-    <script>
-        async function handleRegistration(e) {
-            e.preventDefault();
-            const payload = {
-                full_name: document.getElementById('fullName').value,
-                email: document.getElementById('email').value,
-                phone_number: document.getElementById('phone').value,
-                password: document.getElementById('password').value,
-                role: 'CUSTOMER'
-            };
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+    const form = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
 
-            try {
-                await Auth.register(payload);
-                alert('Account created successfully!');
-                window.location.href = 'login.html';
-            } catch (err) {
-                alert('Registration failed. Please try again.');
+    function showErr(boxId, msg) {
+        const box = document.getElementById(boxId);
+        const inputId = { nameErr:'fullName', emailErr:'email', passErr:'password', confirmErr:'confirmPassword' }[boxId];
+        if (inputId) document.getElementById(inputId).classList.add('is-error');
+        box.style.display = 'flex';
+        box.querySelector('span').textContent = msg;
+    }
+    function clearErrs() {
+        ['nameErr','emailErr','passErr','confirmErr'].forEach(id => {
+            const box = document.getElementById(id);
+            box.style.display = 'none';
+        });
+        ['fullName','email','password','confirmPassword'].forEach(id => {
+            document.getElementById(id).classList.remove('is-error');
+        });
+        errorBox.style.display = 'none';
+        successBox.style.display = 'none';
+    }
+    function showGlobalError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearErrs();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        let hasError = false;
+
+        if (fullName.length < 2) { showErr('nameErr', 'Full name must be at least 2 characters.'); hasError = true; }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('emailErr', 'Please enter a valid email address.'); hasError = true; }
+        if (password.length < 6) { showErr('passErr', 'Password must be at least 6 characters.'); hasError = true; }
+        if (password !== confirm) { showErr('confirmErr', 'Passwords do not match.'); hasError = true; }
+
+        if (hasError) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account…';
+
+        const payload = {
+            full_name: fullName,
+            email: email,
+            phone_number: phone,
+            password: password,
+            role: 'CUSTOMER'
+        };
+
+        try {
+            await Auth.register(payload);
+            successBox.textContent = 'Account created! Redirecting to sign in…';
+            successBox.style.display = 'block';
+            setTimeout(() => window.location.href = 'login.html', 1500);
+        } catch (err) {
+            const msg = err.message || 'Registration failed. Please try again.';
+            if (msg.toLowerCase().includes('email')) {
+                showErr('emailErr', msg);
+            } else {
+                showGlobalError(msg);
             }
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
         }
-    </script>
+    });
+</script>
 </body>
-
 </html>

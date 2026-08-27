@@ -1,5 +1,102 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoadSafe | Services</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="home.html" aria-label="Back">‹</a><span class="header-title">Services</span><a href="history.html" aria-label="Requests">${''}</a></header><section class="content-body"><div class="page-heading"><h1>Roadside services</h1><p>Choose a service to see its scope and request help.</p></div><div id="message"></div><div class="service-grid" id="services"></div></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>
-const host=document.querySelector('#services');
-function iconFor(s){return /tow/i.test(s.category||s.name)?'car':/battery|electric/i.test(s.name)?'clock':'wrench'}
-async function load(){UI.loading(host,'Loading available services…');try{const services=await API.get('/services');if(!services.length){host.innerHTML='<div class="empty-state">No services are currently available.</div>';return}host.innerHTML=services.map(s=>`<article class="card service-card"><div class="card-body"><div class="service-top"><span class="service-icon">${UI.icon(iconFor(s))}</span><div><h3>${UI.escape(s.name)}</h3><p class="muted">${UI.escape(s.description||'Professional roadside assistance.')}</p></div></div><div class="meta-row"><span>${UI.icon('clock')}${s.estimated_duration_minutes?`${s.estimated_duration_minutes} min`:'Duration on assessment'}</span><span>From ${Number(s.base_price).toLocaleString(undefined,{style:'currency',currency:'USD'})}</span></div><span class="badge badge-success">Available</span><p><a class="btn btn-primary" href="service-detail.html?id=${encodeURIComponent(s.id)}">View service</a></p></div></article>`).join('')}catch(e){UI.alert(document.querySelector('#message'),'We could not load services. Please try again.');host.innerHTML=''} }load();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>RoadSafe | Services</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container">
+    <header class="header">
+        <a href="home.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Services Catalog</span>
+        <a href="history.html" class="header-icon" aria-label="History">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+        </a>
+    </header>
+
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>Roadside Services</h1>
+            <p>Select a service to view details and request quick assistance.</p>
+        </div>
+        <div id="message"></div>
+        <div class="service-grid" id="services"></div>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="home.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/></svg>
+            Home
+        </a>
+        <a href="request.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Assist
+        </a>
+        <a href="history.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
+        </a>
+        <a href="notifications.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+            Alerts
+        </a>
+        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Logout
+        </a>
+    </nav>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+    const host = document.querySelector('#services');
+    function iconFor(s) {
+        return /tow/i.test(s.category || s.name) ? 'car' : /battery|electric/i.test(s.name) ? 'clock' : 'wrench';
+    }
+    async function load() {
+        UI.loading(host, 'Loading available services…');
+        try {
+            const services = await API.get('/services');
+            if (!services.length) {
+                host.innerHTML = '<div class="empty-state">No services are currently available.</div>';
+                return;
+            }
+            host.innerHTML = services.map(s => `
+                <article class="card service-card">
+                    <div class="card-body">
+                        <div class="service-top">
+                            <span class="service-icon">${UI.icon(iconFor(s))}</span>
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:600;">${UI.escape(s.name)}</h3>
+                                <p class="muted">${UI.escape(s.description || 'Professional roadside assistance.')}</p>
+                            </div>
+                        </div>
+                        <div class="meta-row">
+                            <span>${UI.icon('clock')}${s.estimated_duration_minutes ? `${s.estimated_duration_minutes} min` : 'Est. upon arrival'}</span>
+                            <span style="font-weight:600; color:var(--primary-teal);">From ${Number(s.base_price).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <a class="btn btn-primary" href="service-detail.html?id=${encodeURIComponent(s.id)}">View Service Details</a>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        } catch (e) {
+            UI.alert(document.querySelector('#message'), 'We could not load services. Please try again.');
+            host.innerHTML = '';
+        }
+    }
+    load();
+</script>
+</body>
+</html>

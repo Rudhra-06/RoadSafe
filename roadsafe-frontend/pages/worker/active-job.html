@@ -1,1 +1,227 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Active job</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="dashboard.html">‹</a><span class="header-title">Active job</span><span id="badge"></span></header><section class="content-body"><div id="message"></div><div id="job"></div><section class="card"><h3>Update job status</h3><div id="actions"></div></section><section class="card" id="record" hidden><h3>Complete and invoice</h3><label>Service delivered</label><select id="service" class="input-field"></select><label>Parts used</label><div id="parts" class="checkbox-grid"></div><label>Work notes</label><textarea id="notes" class="input-field"></textarea><button class="btn btn-primary" id="complete">Generate invoice and complete job</button></section></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>const id=new URLSearchParams(window.location.search).get('id')||localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID),next={ACCEPTED:['EN_ROUTE','Set en route'],EN_ROUTE:['ARRIVED','Mark arrived'],ARRIVED:['IN_SERVICE','Start service']};async function load(){if(!id){window.location.href='dashboard.html';return}try{const t=await API.get('/tickets/'+id);badge.innerHTML=UI.statusBadge(t.status);job.innerHTML=`<section class="card"><h3>${UI.escape(t.description)}</h3><p class="muted">Customer contact: ${UI.escape(t.contact_phone||'Not provided')}</p><p class="muted">Vehicle: ${UI.escape(t.vehicle_type)}</p><p class="muted">Location: ${t.latitude.toFixed(5)}, ${t.longitude.toFixed(5)}</p></section>`;const n=next[t.status];actions.innerHTML=n?`<button class="btn btn-primary" onclick="changeStatus('${n[0]}')">${n[1]}</button>`:'<p class="muted">No further status action is available.</p>';record.hidden=t.status!=='IN_SERVICE';if(t.status==='IN_SERVICE')await loadRecord()}catch(e){UI.alert(message,'This job could not be loaded.')}}async function changeStatus(s){try{await API.patch('/tickets/'+id+'/status',{status:s});load()}catch(e){UI.alert(message,e.message||'Status could not be updated.')}}async function loadRecord(){const [services,allParts]=await Promise.all([API.get('/services'),API.get('/parts')]);service.innerHTML=services.map(s=>`<option value="${s.id}">${UI.escape(s.name)} — ${s.base_price}</option>`).join('');parts.innerHTML=allParts.filter(p=>p.stock_quantity>0).map(p=>`<label class="check-item"><input type="checkbox" value="${p.id}">${UI.escape(p.name)} (${p.stock_quantity})</label>`).join('')}complete.onclick=async()=>{complete.disabled=true;try{const partsUsed=[...parts.querySelectorAll(':checked')].map(x=>({part_id:x.value,quantity:1}));const invoice=await API.post(`/billing/tickets/${id}/complete`,{service_id:service.value,parts:partsUsed,notes:notes.value||null});localStorage.removeItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);window.location.href='../customer/payment.html?invoice_id='+invoice.id}catch(e){complete.disabled=false;UI.alert(message,e.message||'Invoice could not be generated.')}};load();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Manage your active roadside assistance job.">
+    <title>Active Job — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        .status-btn {
+            min-height: 56px;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .info-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 0; border-bottom: 1px solid var(--border-light);
+            font-size: .88rem;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row svg { color: var(--primary-teal); flex-shrink: 0; margin-top: 1px; }
+        .info-label { color: var(--text-secondary); font-size: .75rem; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+<main class="pwa-container">
+    <header class="header">
+        <a href="dashboard.html" class="header-back" aria-label="Back to dashboard">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Active Job</span>
+        <span id="statusBadgeWrap" style="flex-shrink:0;"></span>
+    </header>
+
+    <section class="content-body">
+        <div id="message"></div>
+        <div id="jobDetails"></div>
+
+        <!-- Status Controls -->
+        <section class="card" id="statusSection" style="display:none;">
+            <h2 style="font-size:1rem;font-weight:600;margin-bottom:14px;">Update Status</h2>
+            <div id="statusActions"></div>
+        </section>
+
+        <!-- Invoice Section -->
+        <section class="card" id="invoiceSection" style="display:none;">
+            <h2 style="font-size:1rem;font-weight:600;margin-bottom:14px;">Complete Job &amp; Invoice</h2>
+
+            <div class="form-group">
+                <label class="form-label" for="serviceSelect">Service Delivered</label>
+                <select id="serviceSelect" class="input-field"></select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Parts Used</label>
+                <div id="partsGrid" class="checkbox-grid"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="workNotes">Work Notes</label>
+                <textarea id="workNotes" class="input-field" rows="3" placeholder="Describe what was done…"></textarea>
+            </div>
+
+            <button class="btn btn-success status-btn" id="completeBtn">
+                <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                Generate Invoice &amp; Complete
+            </button>
+        </section>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Worker navigation">
+        <a href="dashboard.html" class="nav-item active" aria-current="page">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Jobs
+        </a>
+        <a href="job-history.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
+        </a>
+        <a href="notifications.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+            Alerts
+        </a>
+        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Logout
+        </a>
+    </nav>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const id = new URLSearchParams(location.search).get('id')
+            || localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+
+    const msgEl       = document.getElementById('message');
+    const jobDetails  = document.getElementById('jobDetails');
+    const statusSec   = document.getElementById('statusSection');
+    const invoiceSec  = document.getElementById('invoiceSection');
+    const statusBadge = document.getElementById('statusBadgeWrap');
+    const completeBtn = document.getElementById('completeBtn');
+
+    // Next status map
+    const NEXT = {
+        ACCEPTED:   ['EN_ROUTE',    'Set En Route',    'btn-primary'],
+        EN_ROUTE:   ['ARRIVED',     'Mark Arrived',    'btn-primary'],
+        ARRIVED:    ['IN_SERVICE',  'Start Service',   'btn-success'],
+    };
+
+    if (!id) { location.href = 'dashboard.html'; }
+
+    async function load() {
+        try {
+            const t = await API.get('/tickets/' + id);
+            statusBadge.innerHTML = UI.statusBadge(t.status);
+
+            jobDetails.innerHTML = `
+            <section class="card">
+                <div class="info-row">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+                    <div>
+                        <div class="info-label">Issue</div>
+                        <strong>${UI.escape(t.description)}</strong>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <div>
+                        <div class="info-label">Vehicle</div>
+                        <span>${UI.escape(t.vehicle_type || 'Not specified')}</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1.1.4 2.1.8 3.1a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c1 .4 2 .7 3.1.8a2 2 0 0 1 1.6 1.7z"/></svg>
+                    <div>
+                        <div class="info-label">Customer Contact</div>
+                        <span>${UI.escape(t.contact_phone || 'Not provided')}</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <div>
+                        <div class="info-label">Location</div>
+                        <span>${(t.latitude||0).toFixed(5)}, ${(t.longitude||0).toFixed(5)}</span>
+                    </div>
+                </div>
+            </section>`;
+
+            const nextStep = NEXT[t.status];
+            if (nextStep) {
+                statusSec.style.display = 'block';
+                document.getElementById('statusActions').innerHTML = `
+                    <button class="btn ${nextStep[2]} status-btn" onclick="changeStatus('${nextStep[0]}')">
+                        <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        ${nextStep[1]}
+                    </button>`;
+            } else if (['COMPLETED','CANCELLED','FAILED'].includes(t.status)) {
+                statusSec.style.display = 'block';
+                document.getElementById('statusActions').innerHTML = `<p class="muted">This job is ${t.status.toLowerCase()}. No further actions available.</p>`;
+            } else {
+                statusSec.style.display = 'none';
+            }
+
+            if (t.status === 'IN_SERVICE') {
+                invoiceSec.style.display = 'block';
+                await loadInvoiceOptions();
+            } else {
+                invoiceSec.style.display = 'none';
+            }
+        } catch (err) {
+            UI.alert(msgEl, err.message || 'This job could not be loaded.');
+        }
+    }
+
+    async function changeStatus(newStatus) {
+        try {
+            await API.patch('/tickets/' + id + '/status', { status: newStatus });
+            await load();
+        } catch (err) {
+            UI.alert(msgEl, err.message || 'Status could not be updated.');
+        }
+    }
+
+    async function loadInvoiceOptions() {
+        const [services, allParts] = await Promise.all([API.get('/services'), API.get('/parts')]);
+        const svc = document.getElementById('serviceSelect');
+        const parts = document.getElementById('partsGrid');
+        svc.innerHTML = services.map(s => `<option value="${s.id}">${UI.escape(s.name)} — ${Number(s.base_price).toLocaleString(undefined,{style:'currency',currency:'INR'})}</option>`).join('');
+        parts.innerHTML = allParts.filter(p => p.stock_quantity > 0).map(p =>
+            `<label class="check-item">
+                <input type="checkbox" value="${p.id}">
+                ${UI.escape(p.name)} (${p.stock_quantity})
+            </label>`
+        ).join('');
+    }
+
+    completeBtn.addEventListener('click', async () => {
+        completeBtn.disabled = true;
+        completeBtn.textContent = 'Generating invoice…';
+        try {
+            const partsUsed = [...document.getElementById('partsGrid').querySelectorAll(':checked')]
+                .map(x => ({ part_id: x.value, quantity: 1 }));
+            const invoice = await API.post(`/billing/tickets/${id}/complete`, {
+                service_id: document.getElementById('serviceSelect').value,
+                parts:      partsUsed,
+                notes:      document.getElementById('workNotes').value || null
+            });
+            localStorage.removeItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+            location.href = '../customer/payment.html?invoice_id=' + invoice.id;
+        } catch (err) {
+            UI.alert(msgEl, err.message || 'Invoice could not be generated.');
+            completeBtn.disabled = false;
+            completeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg> Generate Invoice &amp; Complete`;
+        }
+    });
+
+    load();
+</script>
+</body>
+</html>

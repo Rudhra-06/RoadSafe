@@ -1,50 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Activity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="View your roadside assistance history.">
+    <title>History — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
-
 <body>
-    <div class="pwa-container">
-        <div class="header">
-            <span class="header-title">Service History</span>
-        </div>
+<main class="pwa-container">
+    <header class="header">
+        <span class="header-title">History</span>
+        <a href="home.html" class="header-icon" aria-label="Home">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/></svg>
+        </a>
+    </header>
 
-        <div class="content-body" id="historyList">
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h4>Flat Tire Service</h4>
-                    <span class="badge badge-success">Completed</span>
-                </div>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">August 20, 2026 • Ticket
-                    #RS-3910</p>
-                <p style="font-size: 0.85rem; margin-top: 8px;"><strong>Responder:</strong> Coimbatore Express Garage
-                </p>
-                <p style="font-size: 0.85rem;"><strong>Cost:</strong> $45.00</p>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h4>Battery Jump Start</h4>
-                    <span class="badge badge-success">Completed</span>
-                </div>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">June 11, 2026 • Ticket
-                    #RS-1029</p>
-                <p style="font-size: 0.85rem; margin-top: 8px;"><strong>Responder:</strong> Mike T. (Mechanic)</p>
-                <p style="font-size: 0.85rem;"><strong>Cost:</strong> $30.00</p>
-            </div>
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>Service History</h1>
+            <p>Your past roadside assistance requests.</p>
         </div>
-
-        <div class="bottom-nav">
-            <a href="home.html" class="nav-item"><span>🏠</span>Home</a>
-            <a href="history.html" class="nav-item active"><span>📋</span>Activity</a>
-            <a href="notifications.html" class="nav-item"><span>🔔</span>Alerts</a>
+        <div id="message"></div>
+        <div id="historyList">
+            <div class="state"><div class="spinner"></div><p>Loading history…</p></div>
         </div>
-    </div>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="home.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/></svg>
+            Home
+        </a>
+        <a href="request.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Assist
+        </a>
+        <a href="history.html" class="nav-item active" aria-current="page">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
+        </a>
+        <a href="notifications.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+            Alerts
+        </a>
+        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Logout
+        </a>
+    </nav>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+    const host = document.getElementById('historyList');
+    const msg  = document.getElementById('message');
+
+    async function load() {
+        try {
+            const tickets = await API.get('/tickets');
+            const mine = tickets.filter(t => t.customer_id === Auth.getUser()?.id || true);
+            if (!mine.length) {
+                host.innerHTML = '<div class="empty-state">No service history yet.</div>';
+                return;
+            }
+            host.innerHTML = mine.map(t => `
+                <article class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                        <h3 style="font-size:.95rem;font-weight:600;flex:1;padding-right:8px;">${UI.escape(t.description)}</h3>
+                        ${UI.statusBadge(t.status)}
+                    </div>
+                    <p class="muted" style="font-size:.8rem;">Ticket #${UI.escape(t.id.slice(0,8))}… · ${UI.escape(t.vehicle_type)}</p>
+                    ${t.status === 'COMPLETED' || t.status === 'IN_SERVICE' ?
+                        `<a href="payment.html?invoice_id=${encodeURIComponent(t.id)}" class="btn btn-outline btn-inline" style="margin-top:12px;font-size:.85rem;padding:10px 14px;">
+                            <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            View Invoice
+                        </a>` : ''}
+                    ${['ASSIGNED','ACCEPTED','EN_ROUTE','ARRIVED','IN_SERVICE'].includes(t.status) ?
+                        `<a href="tracking.html" class="btn btn-secondary btn-inline" style="margin-top:12px;font-size:.85rem;padding:10px 14px;" onclick="localStorage.setItem('${CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID}','${t.id}')">
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Track
+                        </a>` : ''}
+                </article>
+            `).join('');
+        } catch (e) {
+            UI.alert(msg, e.message || 'Could not load history.');
+            host.innerHTML = '';
+        }
+    }
+    load();
+</script>
 </body>
-
 </html>

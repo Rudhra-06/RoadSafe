@@ -30,10 +30,10 @@ class AuthService:
 
         hashed_pwd = get_password_hash(user_in.password)
         db_user = User(
-            email=user_in.email,
+            email=user_in.email.strip().lower(),
             hashed_password=hashed_pwd,
-            full_name=user_in.full_name,
-            phone_number=user_in.phone_number,
+            full_name=user_in.full_name.strip(),
+            phone_number=user_in.phone_number or "",
             role=user_in.role
         )
         db.add(db_user)

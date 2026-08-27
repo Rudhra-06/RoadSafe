@@ -1,1 +1,229 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mechanic registration</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><span class="header-title">Mechanic onboarding</span></header><section class="content-body"><div class="page-heading"><h1>Create provider account</h1><p>Skill selections are stored in your responder profile.</p></div><div id="message"></div><form id="registrationForm"><label>Full name</label><input id="fullName" class="input-field" required><label>Email</label><input id="email" type="email" class="input-field" required><label>Phone</label><input id="phone" type="tel" class="input-field" required><label>Password</label><input id="password" type="password" minlength="6" class="input-field" required><label>Provider type</label><select id="type" class="input-field"><option value="CAR_MECHANIC">Car mechanic</option><option value="BIKE_MECHANIC">Bike mechanic</option><option value="TOWING_OPERATOR">Towing operator</option><option value="ROADSIDE_TECHNICIAN">Roadside technician</option></select><label>Shop / provider name</label><input id="shop" class="input-field"><label>Shop address</label><textarea id="address" class="input-field"></textarea><label>Skills / expertise</label><div class="checkbox-grid" id="skills"></div><button class="btn btn-primary" id="submit">Create mechanic account</button></form></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/ui.js"></script><script>const formEl=document.querySelector('#registrationForm'),skillsEl=document.querySelector('#skills'),submitEl=document.querySelector('#submit'),messageEl=document.querySelector('#message');skillsEl.innerHTML=['Engine Repair','Battery Assistance','Tire Repair','Towing','Electrical Repair','AC Repair','Fuel Assistance','General Maintenance'].map(x=>`<label class="check-item"><input type="checkbox" value="${x}">${x}</label>`).join('');formEl.onsubmit=async e=>{e.preventDefault();submitEl.disabled=true;try{await Auth.register({full_name:document.querySelector('#fullName').value,email:document.querySelector('#email').value,phone_number:document.querySelector('#phone').value,password:document.querySelector('#password').value,role:'RESPONDER',responder_type:document.querySelector('#type').value,shop_name:document.querySelector('#shop').value||null,shop_address:document.querySelector('#address').value||null,skills:[...skillsEl.querySelectorAll(':checked')].map(x=>x.value)});UI.alert(messageEl,'Account created. You can now sign in.','success');formEl.reset()}catch(err){UI.alert(messageEl,err.message||'Registration could not be completed.')}finally{submitEl.disabled=false}};</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Register as a RoadSafe mechanic or roadside assistance provider.">
+    <title>Worker Registration — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        body { background: linear-gradient(160deg, #f0edf4 0%, #f7f8fa 60%); }
+        .reg-wrap {
+            width: 100%; max-width: 480px; margin: 0 auto;
+            padding: 20px 16px 48px;
+        }
+        .brand-header {
+            text-align: center; padding: 28px 0 20px;
+        }
+        .brand-logo {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, var(--primary-teal), var(--accent-teal));
+            border-radius: var(--radius-lg);
+            display: grid; place-items: center;
+            margin: 0 auto 14px;
+            box-shadow: 0 4px 14px rgba(113,75,103,.3);
+        }
+        .brand-logo svg { width: 30px; height: 30px; stroke: #fff; fill: none; }
+        .brand-header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .brand-header p { color: var(--text-secondary); font-size: .875rem; }
+        .form-card {
+            background: var(--surface-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 24px 20px 28px;
+        }
+        .section-divider {
+            display: flex; align-items: center; gap: 10px;
+            margin: 22px 0 18px;
+        }
+        .section-divider span {
+            font-size: .75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--text-secondary); white-space: nowrap;
+        }
+        .section-divider::before, .section-divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border-light);
+        }
+        .skill-note { font-size: .78rem; color: var(--text-secondary); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<main style="width:100%;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;">
+<div class="reg-wrap">
+    <div class="brand-header">
+        <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+        </div>
+        <h1>Mechanic Onboarding</h1>
+        <p>Create your provider account to accept jobs</p>
+    </div>
+
+    <div class="form-card">
+        <div id="message"></div>
+
+        <form id="registrationForm" novalidate>
+
+            <!-- Personal Info -->
+            <div class="section-divider"><span>Personal Info</span></div>
+
+            <div class="form-group">
+                <label class="form-label" for="fullName">Full Name <span style="color:var(--danger-red);">*</span></label>
+                <input id="fullName" type="text" class="input-field" required minlength="2"
+                       placeholder="Your full name" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email <span style="color:var(--danger-red);">*</span></label>
+                <input id="email" type="email" class="input-field" required
+                       placeholder="you@example.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone <span style="color:var(--danger-red);">*</span></label>
+                <input id="phone" type="tel" class="input-field" required
+                       placeholder="+91 98765 43210" autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password <span style="color:var(--danger-red);">*</span></label>
+                <input id="password" type="password" class="input-field" required minlength="6"
+                       placeholder="At least 6 characters" autocomplete="new-password">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Confirm Password <span style="color:var(--danger-red);">*</span></label>
+                <input id="confirmPassword" type="password" class="input-field" required
+                       placeholder="Re-enter password" autocomplete="new-password">
+            </div>
+
+            <!-- Provider Details -->
+            <div class="section-divider"><span>Provider Details</span></div>
+
+            <div class="form-group">
+                <label class="form-label" for="type">Provider Type</label>
+                <select id="type" class="input-field">
+                    <option value="CAR_MECHANIC">Car Mechanic</option>
+                    <option value="BIKE_MECHANIC">Bike Mechanic</option>
+                    <option value="TOWING_OPERATOR">Towing Operator</option>
+                    <option value="ROADSIDE_TECHNICIAN" selected>Roadside Technician</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="shop">Shop / Provider Name</label>
+                <input id="shop" type="text" class="input-field"
+                       placeholder="e.g. City Auto Care" maxlength="255">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="address">Shop Address</label>
+                <textarea id="address" class="input-field"
+                          placeholder="Street, City, State" rows="2"></textarea>
+            </div>
+
+            <!-- Skills -->
+            <div class="section-divider"><span>Skills / Expertise</span></div>
+            <p class="skill-note">Select all services you can provide. At least one recommended.</p>
+
+            <div class="checkbox-grid" id="skillsGrid"></div>
+
+            <!-- Submit -->
+            <button class="btn btn-primary" id="submitBtn" type="submit" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;"><path d="M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>
+                Create Mechanic Account
+            </button>
+        </form>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:.875rem;color:var(--text-secondary);">
+        Already have an account? <a href="login.html">Sign in here</a><br>
+        <a href="../customer/register.html" style="color:var(--text-secondary);margin-top:6px;display:inline-block;font-size:.82rem;">Register as Customer instead</a>
+    </div>
+</div>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    const SKILLS = [
+        'Engine Repair',
+        'Battery Assistance',
+        'Tire Repair',
+        'Towing',
+        'Electrical Repair',
+        'AC Repair',
+        'Fuel Assistance',
+        'General Maintenance'
+    ];
+
+    // Build skills checkboxes
+    const skillsGrid = document.getElementById('skillsGrid');
+    skillsGrid.innerHTML = SKILLS.map((skill, i) =>
+        `<label class="check-item" for="skill_${i}">
+            <input type="checkbox" id="skill_${i}" value="${skill}">
+            ${UI.escape(skill)}
+        </label>`
+    ).join('');
+
+    const form     = document.getElementById('registrationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageEl = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        messageEl.innerHTML = '';
+
+        const fullName        = document.getElementById('fullName').value.trim();
+        const email           = document.getElementById('email').value.trim();
+        const phone           = document.getElementById('phone').value.trim();
+        const password        = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const type            = document.getElementById('type').value;
+        const shopName        = document.getElementById('shop').value.trim() || null;
+        const shopAddress     = document.getElementById('address').value.trim() || null;
+        const skills          = [...skillsGrid.querySelectorAll('input[type=checkbox]:checked')].map(x => x.value);
+
+        // Client-side validation
+        const errors = [];
+        if (fullName.length < 2)  errors.push('Full name must be at least 2 characters.');
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Please enter a valid email address.');
+        if (!phone)               errors.push('Phone number is required.');
+        if (password.length < 6)  errors.push('Password must be at least 6 characters.');
+        if (password !== confirmPassword) errors.push('Passwords do not match.');
+
+        if (errors.length) {
+            UI.alert(messageEl, errors.join(' '), 'error');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account…';
+
+        try {
+            await Auth.register({
+                full_name:      fullName,
+                email:          email,
+                phone_number:   phone,
+                password:       password,
+                role:           'RESPONDER',
+                responder_type: type,
+                shop_name:      shopName,
+                shop_address:   shopAddress,
+                skills:         skills
+            });
+            UI.alert(messageEl, 'Account created successfully! You can now sign in.', 'success');
+            form.reset();
+            // Uncheck all skill boxes
+            skillsGrid.querySelectorAll('input').forEach(i => i.checked = false);
+            setTimeout(() => window.location.href = 'login.html', 2000);
+        } catch (err) {
+            UI.alert(messageEl, err.message || 'Registration could not be completed. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;"><path d="M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg> Create Mechanic Account`;
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,1 +1,103 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Track assistance</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="home.html">‹</a><span class="header-title">Track assistance</span><span id="status"></span></header><section class="content-body"><div id="message"></div><div class="map-placeholder"><div><p>Live location visualization</p><small id="coordinates"></small></div></div><section class="card"><h3 id="title">Assistance request</h3><p class="muted" id="ticketId"></p><p id="detail"></p></section><section class="card"><h3>Service progress</h3><div class="timeline" id="timeline"></div></section></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ws.js"></script><script src="../../js/ui.js"></script><script>const id=localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID),steps=['REQUESTED','ASSIGNED','ACCEPTED','EN_ROUTE','ARRIVED','IN_SERVICE','COMPLETED'];let ticket;if(!id)location.href='history.html';function render(t){ticket=t;status.innerHTML=UI.statusBadge(t.status);title.textContent=t.description;ticketId.textContent='Ticket #'+t.id;coordinates.textContent=`${t.latitude.toFixed(5)}, ${t.longitude.toFixed(5)}`;const failed=['CANCELLED','FAILED','NO_RESPONDER'].includes(t.status),current=steps.indexOf(t.status);timeline.innerHTML=(failed?[...steps.slice(0,Math.max(1,current)),t.status]:steps).map((s,i)=>`<div class="timeline-item ${failed&&s===t.status?'failed':i<current?'done':i===current?'current':''}">${UI.statusLabel(s)}</div>`).join('');detail.textContent=failed?'Dispatch needs attention. Please contact support or create a new request.':'This page updates as your provider progresses.'}API.get('/tickets/'+id).then(render).catch(()=>UI.alert(message,'This request could not be loaded.'));WSManager.connect('tickets/'+id,e=>{if(e.event==='STATUS_UPDATE'&&ticket)render({...ticket,status:e.new_status})});</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Track Assistance — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="home.html" class="header-back" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Live Dispatch Status</span>
+        <span id="statusBadge"></span>
+    </header>
+
+    <section class="content-body">
+        <div id="message"></div>
+
+        <div class="map-placeholder">
+            <div>
+                <svg class="icon" viewBox="0 0 24 24" style="width:36px; height:36px; color:var(--primary-teal); margin-bottom:6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <p style="font-weight:600;">GPS Telemetry Active</p>
+                <small id="coordinates" style="color:var(--text-secondary);"></small>
+            </div>
+        </div>
+
+        <section class="card">
+            <h3 id="title" style="font-size:1.05rem; font-weight:700;">Loading request…</h3>
+            <p class="muted" id="ticketId" style="font-size:0.8rem;"></p>
+            <p id="detail" style="margin-top:8px; font-size:0.88rem;"></p>
+        </section>
+
+        <section class="card">
+            <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:12px;">Dispatch Progression</h3>
+            <div class="timeline" id="timeline"></div>
+        </section>
+
+        <div id="actionArea" style="margin-top:16px;"></div>
+    </section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ws.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const id = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+    const steps = ['REQUESTED', 'ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_SERVICE', 'COMPLETED'];
+    let ticket;
+
+    if (!id) location.href = 'history.html';
+
+    function render(t) {
+        ticket = t;
+        document.getElementById('statusBadge').innerHTML = UI.statusBadge(t.status);
+        document.getElementById('title').textContent = t.description;
+        document.getElementById('ticketId').textContent = 'Ticket #' + t.id.slice(0, 8);
+        document.getElementById('coordinates').textContent = `Customer Location: ${(t.latitude||0).toFixed(4)}, ${(t.longitude||0).toFixed(4)}`;
+
+        const failed = ['CANCELLED', 'FAILED', 'NO_RESPONDER'].includes(t.status);
+        const current = steps.indexOf(t.status);
+
+        document.getElementById('timeline').innerHTML = (failed ? [...steps.slice(0, Math.max(1, current)), t.status] : steps).map((s, i) => `
+            <div class="timeline-item ${failed && s === t.status ? 'failed' : i < current ? 'done' : i === current ? 'current' : ''}">
+                <strong>${UI.statusLabel(s)}</strong>
+            </div>
+        `).join('');
+
+        document.getElementById('detail').textContent = failed
+            ? 'Dispatch could not be completed automatically. Please check your request.'
+            : 'Your responder is updating progress in real-time.';
+
+        const actionArea = document.getElementById('actionArea');
+        if (t.status === 'COMPLETED') {
+            actionArea.innerHTML = `
+                <a href="payment.html?invoice_id=${encodeURIComponent(t.id)}" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Proceed to Invoice &amp; Payment
+                </a>
+            `;
+        }
+    }
+
+    API.get('/tickets/' + id).then(render).catch(() => UI.alert(document.getElementById('message'), 'This request could not be loaded.'));
+    
+    if (typeof WSManager !== 'undefined') {
+        WSManager.connect('tickets/' + id, e => {
+            if (e.event === 'STATUS_UPDATE' && ticket) {
+                render({ ...ticket, status: e.new_status });
+            }
+        });
+    }
+</script>
+</body>
+</html>

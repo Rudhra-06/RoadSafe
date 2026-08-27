@@ -1,41 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Notifications</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Worker notifications and dispatch broadcasts.">
+    <title>Worker Notifications — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
-
 <body>
-    <div class="pwa-container">
-        <div class="header">
-            <span class="header-title">Responder Broadcasts</span>
+<main class="pwa-container">
+    <header class="header">
+        <a href="dashboard.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Responder Broadcasts</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>Broadcasts</h1>
+            <p>Real-time emergency & dispatch alerts.</p>
         </div>
 
-        <div class="content-body">
-            <div class="card" style="border-left: 4px solid var(--danger-red);">
-                <h4>High Demand Alert</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Surge in emergency tire
-                    change requests near NH-44 highway region.</p>
-                <small style="color: var(--text-secondary);">5 mins ago</small>
+        <div class="card" style="border-left: 4px solid var(--danger-red);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                <h3 style="font-size:.95rem; font-weight:600;">High Demand Alert</h3>
+                <small style="color:var(--text-secondary); white-space:nowrap; margin-left:8px;">5 mins ago</small>
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Surge in emergency tire change requests near NH-44 highway region.</p>
+        </div>
 
-            <div class="card" style="border-left: 4px solid var(--primary-teal);">
-                <h4>Payout Processed</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Weekly settlement of
-                    $680.00 transferred to registered bank account.</p>
-                <small style="color: var(--text-secondary);">2 days ago</small>
+        <div class="card" style="border-left: 4px solid var(--primary-teal);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                <h3 style="font-size:.95rem; font-weight:600;">Payout Processed</h3>
+                <small style="color:var(--text-secondary); white-space:nowrap; margin-left:8px;">2 days ago</small>
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Weekly settlement transferred to registered bank account.</p>
         </div>
+    </section>
 
-        <div class="bottom-nav">
-            <a href="dashboard.html" class="nav-item"><span>🛠️</span>Jobs</a>
-            <a href="job-history.html" class="nav-item"><span>📜</span>History</a>
-            <a href="notifications.html" class="nav-item active"><span>🔔</span>Alerts</a>
-        </div>
-    </div>
+    <nav class="bottom-nav" aria-label="Worker navigation">
+        <a href="dashboard.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Jobs
+        </a>
+        <a href="job-history.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
+        </a>
+        <a href="notifications.html" class="nav-item active" aria-current="page">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+            Alerts
+        </a>
+        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Logout
+        </a>
+    </nav>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script>Auth.guardRoute();</script>
 </body>
-
 </html>

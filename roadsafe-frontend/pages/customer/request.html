@@ -1,3 +1,129 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Request assistance</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="services.html">‹</a><span class="header-title">Request assistance</span></header><section class="content-body"><div class="page-heading"><h1>Confirm service and location</h1><p>We send this to the nearest available provider.</p></div><div id="message"></div><form id="form"><label>Service</label><select class="input-field" id="service"></select><label>Vehicle</label><input class="input-field" id="vehicle" required placeholder="e.g. 2021 Toyota Camry"><label>Issue details</label><textarea class="input-field" id="description" required minlength="5"></textarea><label>Priority</label><select class="input-field" id="priority"><option value="MEDIUM">Standard assistance</option><option value="HIGH">Urgent</option><option value="EMERGENCY">Emergency</option></select><label>Your location</label><input class="input-field" id="location" readonly><p class="muted" id="locationHelp">Requesting location…</p><button class="btn btn-primary" disabled id="continue">Review request</button></form></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>
-const id=new URLSearchParams(window.location.search).get('service_id'),sel=document.querySelector('#service'),msg=document.querySelector('#message'),formEl=document.querySelector('#form'),locationInput=document.querySelector('#location');let coords,services=[];const type=s=>/tow/i.test(s.category||s.name)?'TOWING_OPERATOR':/bike/i.test(s.category||s.name)?'BIKE_MECHANIC':/engine|tyre|tire|mechanic/i.test(s.category||s.name)?'CAR_MECHANIC':'ROADSIDE_TECHNICIAN';Promise.all([API.get('/services'),new Promise(done=>navigator.geolocation.getCurrentPosition(p=>{coords={latitude:p.coords.latitude,longitude:p.coords.longitude};done()},done))]).then(([items])=>{services=items;sel.innerHTML=items.map(s=>`<option value="${s.id}">${UI.escape(s.name)}</option>`).join('');if(id)sel.value=id;if(coords){locationInput.value=`${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;document.querySelector('#locationHelp').textContent='Location captured.';document.querySelector('#continue').disabled=false}else{document.querySelector('#locationHelp').textContent='Location permission is required.';UI.alert(msg,'Enable device location to request roadside help.')}}).catch(()=>UI.alert(msg,'Services could not be loaded. Please retry.'));formEl.onsubmit=e=>{e.preventDefault();const service=services.find(s=>s.id===sel.value);sessionStorage.setItem('rs_request_draft',JSON.stringify({service,vehicle_type:document.querySelector('#vehicle').value,description:document.querySelector('#description').value,priority:document.querySelector('#priority').value,...coords,service_type:type(service),contact_phone:Auth.getUser()?.phone_number||null}));window.location.href='confirm.html'};
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Request Assistance — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="services.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Request Assistance</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>Emergency &amp; Roadside Help</h1>
+            <p>Confirm vehicle details and your current location for instant dispatch.</p>
+        </div>
+
+        <div id="message"></div>
+
+        <form id="form" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="service">Service Category <span style="color:var(--danger-red);">*</span></label>
+                <select class="input-field" id="service"></select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="vehicle">Vehicle Make &amp; Model <span style="color:var(--danger-red);">*</span></label>
+                <input class="input-field" id="vehicle" required placeholder="e.g. Maruti Swift / Hyundai Creta">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Issue Summary <span style="color:var(--danger-red);">*</span></label>
+                <textarea class="input-field" id="description" required minlength="5" placeholder="Briefly describe what happened (e.g. flat tyre on highway side)..." rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="priority">Urgency Level</label>
+                <select class="input-field" id="priority">
+                    <option value="MEDIUM">Standard Roadside Assistance</option>
+                    <option value="HIGH">Urgent (Blocked Traffic)</option>
+                    <option value="EMERGENCY">Emergency (Safety Hazard)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="location">GPS Coordinates</label>
+                <input class="input-field" id="location" readonly style="background:#f1f5f9;">
+                <p class="muted" id="locationHelp" style="font-size:0.8rem; margin-top:4px;">Requesting device GPS coordinates…</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" disabled id="continue" style="margin-top:12px;">
+                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                Review &amp; Confirm Request
+            </button>
+        </form>
+    </section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const id = new URLSearchParams(window.location.search).get('service_id');
+    const sel = document.querySelector('#service');
+    const msg = document.querySelector('#message');
+    const formEl = document.querySelector('#form');
+    const locationInput = document.querySelector('#location');
+    let coords, services = [];
+
+    const type = s => /tow/i.test(s.category || s.name) ? 'TOWING_OPERATOR' : /bike/i.test(s.category || s.name) ? 'BIKE_MECHANIC' : /engine|tyre|tire|mechanic/i.test(s.category || s.name) ? 'CAR_MECHANIC' : 'ROADSIDE_TECHNICIAN';
+
+    Promise.all([
+        API.get('/services'),
+        new Promise(done => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p => { coords = { latitude: p.coords.latitude, longitude: p.coords.longitude }; done(); },
+                    () => {
+                        // Fallback default coordinates if permission denied
+                        coords = { latitude: 11.0168, longitude: 76.9558 };
+                        done();
+                    }
+                );
+            } else {
+                coords = { latitude: 11.0168, longitude: 76.9558 };
+                done();
+            }
+        })
+    ]).then(([items]) => {
+        services = items;
+        sel.innerHTML = items.map(s => `<option value="${s.id}">${UI.escape(s.name)} — ${Number(s.base_price).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</option>`).join('');
+        if (id) sel.value = id;
+
+        if (coords) {
+            locationInput.value = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+            document.querySelector('#locationHelp').textContent = 'Device GPS location verified.';
+            document.querySelector('#continue').disabled = false;
+        }
+    }).catch(() => UI.alert(msg, 'Services could not be loaded. Please retry.'));
+
+    formEl.onsubmit = e => {
+        e.preventDefault();
+        const service = services.find(s => s.id === sel.value);
+        sessionStorage.setItem('rs_request_draft', JSON.stringify({
+            service,
+            vehicle_type: document.querySelector('#vehicle').value,
+            description: document.querySelector('#description').value,
+            priority: document.querySelector('#priority').value,
+            ...coords,
+            service_type: type(service),
+            contact_phone: Auth.getUser()?.phone_number || null
+        }));
+        window.location.href = 'confirm.html';
+    };
+</script>
+</body>
+</html>

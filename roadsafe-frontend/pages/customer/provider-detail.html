@@ -1,1 +1,69 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoadSafe | Provider details</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="providers.html" aria-label="Back">‹</a><span class="header-title">Provider details</span></header><section class="content-body" id="content"></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>const id=new URLSearchParams(location.search).get('id'),host=document.querySelector('#content');async function load(){UI.loading(host);try{const p=await API.get('/responders/'+id);host.innerHTML=`<div class="provider-image">${UI.icon('wrench')}</div><div class="page-heading"><h1>${UI.escape(p.shop_name||p.full_name)}</h1><p>${UI.escape(p.shop_address||'Provider address not supplied')}</p></div><section class="card"><p>${UI.statusBadge(p.is_available?'AVAILABLE':'UNAVAILABLE')}</p><div class="meta-row"><span>${UI.icon('map')}Provider location available</span><span>${UI.icon('user')}${UI.escape(p.type.replaceAll('_',' '))}</span></div><div class="chip-row">${p.skills.map(x=>`<span class="chip">${UI.escape(x)}</span>`).join('')}</div></section><section class="map-placeholder"><div>${UI.icon('map')}<p>Map is ready for your Leaflet configuration.</p><small>${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)}</small></div></section>${p.phone_number?`<a class="btn btn-outline" href="tel:${encodeURIComponent(p.phone_number)}">${UI.icon('phone')} Contact provider</a>`:''}`}catch(e){host.innerHTML='<div class="empty-state">Provider details are unavailable.</div>'}}load();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>RoadSafe | Provider Details</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="providers.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Provider Details</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body" id="content"></section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+    const id = new URLSearchParams(location.search).get('id');
+    const host = document.querySelector('#content');
+
+    async function load() {
+        UI.loading(host);
+        try {
+            const p = await API.get('/responders/' + id);
+            host.innerHTML = `
+                <div class="provider-image">
+                    <svg class="icon" viewBox="0 0 24 24" style="width:48px; height:48px;"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+                </div>
+                <div class="page-heading">
+                    <h1>${UI.escape(p.shop_name || p.full_name)}</h1>
+                    <p>${UI.escape(p.shop_address || 'Certified Roadside Partner')}</p>
+                </div>
+                <section class="card">
+                    <p>${UI.statusBadge(p.is_available ? 'AVAILABLE' : 'UNAVAILABLE')}</p>
+                    <div class="meta-row">
+                        <span>${UI.icon('map')}GPS Verified</span>
+                        <span>${UI.icon('user')}${UI.escape((p.type || '').replaceAll('_', ' '))}</span>
+                    </div>
+                    <div class="chip-row">
+                        ${(p.skills || []).map(x => `<span class="chip">${UI.escape(x)}</span>`).join('')}
+                    </div>
+                </section>
+                <div style="margin-top:20px;">
+                    <a class="btn btn-primary" href="request.html">
+                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                        Request Assistance from this Provider
+                    </a>
+                </div>
+            `;
+        } catch (e) {
+            host.innerHTML = '<div class="empty-state">Provider details are unavailable.<br><a href="providers.html" class="btn btn-outline" style="margin-top:12px;">Back to Providers</a></div>';
+        }
+    }
+    load();
+</script>
+</body>
+</html>

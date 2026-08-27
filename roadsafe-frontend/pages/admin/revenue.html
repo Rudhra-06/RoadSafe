@@ -3,27 +3,57 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Revenue & Analytics - Admin ERP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue &amp; Analytics - Admin ERP</title>
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
 
 <body style="align-items: flex-start;">
     <div class="desktop-container">
-        <div style="width: 250px; background: var(--primary-dark); color: white; padding: 20px;">
-            <h2>RoadSafe ERP</h2>
-            <div style="margin-top: 30px; display:flex; flex-direction:column; gap: 15px;">
-                <a href="dashboard.html" style="color:#94a3b8; text-decoration:none;">📊 Executive Dashboard</a>
-                <a href="tickets.html" style="color:#94a3b8; text-decoration:none;">🎫 Ticket Operations</a>
-                <a href="mechanics.html" style="color:#94a3b8; text-decoration:none;">🔧 Responder Fleet</a>
-                <a href="revenue.html" style="color:white; text-decoration:none;">💰 Revenue & Payouts</a>
-                <a href="user-management.html" style="color:#94a3b8; text-decoration:none;">👥 User Governance</a>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                RoadSafe <span>ERP</span>
             </div>
-        </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
+                <a href="tickets.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Tickets &amp; Dispatch
+                </a>
+                <a href="mechanics.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+                    Responders
+                </a>
+                <a href="user-management.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Customers &amp; Users
+                </a>
+                <a href="revenue.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Revenue &amp; Billing
+                </a>
+                <a href="notifications.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+                    Broadcasts
+                </a>
+                <a href="#" onclick="Auth.logout(); return false;" class="sidebar-link" style="color: #f87171; margin-top: auto;">
+                    <svg viewBox="0 0 24 24" style="stroke: #f87171;"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+                    Sign Out
+                </a>
+            </nav>
+        </aside>
 
-        <div style="flex: 1; padding: 30px;">
-            <h1>Financial Performance & Payouts</h1>
-            <p style="color: var(--text-secondary); margin-bottom: 20px;">Platform commission tracking, worker
-                settlements, and transaction history.</p>
+        <div style="flex: 1; padding: 30px; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                <div>
+                    <h1 style="font-size: 1.4rem; font-weight: 700;">Financial Performance &amp; Payouts</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Platform commission tracking, worker settlements, and transaction history.</p>
+                </div>
+            </div>
 
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
                 <div class="card">

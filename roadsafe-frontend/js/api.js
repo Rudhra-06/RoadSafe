@@ -17,13 +17,22 @@ const API = {
                 if (response.status === 401) {
                     if (typeof Auth !== "undefined") Auth.logout();
                 }
-                const errorBody = await response.json().catch(() => ({}));
-                throw new Error(errorBody.detail || `API Error: ${response.statusText}`);
+                let detail = `Error ${response.status}: ${response.statusText}`;
+                try {
+                    const body = await response.json();
+                    if (body && body.detail) {
+                        detail = Array.isArray(body.detail)
+                            ? body.detail.map(e => e.msg || String(e)).join("; ")
+                            : String(body.detail);
+                    }
+                } catch (_) { /* response body not JSON */ }
+                throw new Error(detail);
             }
 
             return await response.json();
         } catch (err) {
-            if (!navigator.onLine) {
+            // Only queue offline if truly offline (not a server error)
+            if (!navigator.onLine && typeof OfflineManager !== "undefined") {
                 OfflineManager.queueRequest(endpoint, options);
                 return { offline: true, message: "Action queued offline." };
             }
@@ -49,5 +58,9 @@ const API = {
 
     patch(endpoint, body) {
         return this.request(endpoint, { method: "PATCH", body: JSON.stringify(body) });
+    },
+
+    delete(endpoint) {
+        return this.request(endpoint, { method: "DELETE" });
     }
 };

@@ -1,1 +1,85 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Confirm request</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><a href="request.html">‹</a><span class="header-title">Confirm request</span></header><section class="content-body"><div class="page-heading"><h1>Review your request</h1><p>Submit when the service and location are correct.</p></div><div id="message"></div><div id="summary"></div><button class="btn btn-primary" id="submit">Submit assistance request</button></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>const d=JSON.parse(sessionStorage.getItem('rs_request_draft')||'null'),out=document.querySelector('#summary'),btn=document.querySelector('#submit');if(!d)location.href='request.html';else out.innerHTML=`<section class="card"><h3>${UI.escape(d.service.name)}</h3><p class="muted">${UI.escape(d.service.description||'Roadside assistance')}</p><div class="meta-row"><span>${UI.icon('car')}${UI.escape(d.vehicle_type)}</span><span>${UI.icon('map')}${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)}</span><span>From ${Number(d.service.base_price).toLocaleString(undefined,{style:'currency',currency:'USD'})}</span></div><p>${UI.escape(d.description)}</p></section>`;btn.onclick=async()=>{btn.disabled=true;btn.textContent='Creating request…';try{const r=await API.post('/tickets',d);if(!r.ticket?.id)throw Error('No ticket was returned');localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID,r.ticket.id);sessionStorage.removeItem('rs_request_draft');location.href='tracking.html'}catch(e){btn.disabled=false;btn.textContent='Submit assistance request';UI.alert(message,e.message||'Your request could not be created.')}};</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Confirm Request — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="request.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Confirm Assistance</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>Review Request</h1>
+            <p>Please verify your roadside assistance details before submitting.</p>
+        </div>
+
+        <div id="message"></div>
+        <div id="summary"></div>
+
+        <button class="btn btn-primary" id="submit" style="margin-top:16px;">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Submit Assistance Request
+        </button>
+    </section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const d = JSON.parse(sessionStorage.getItem('rs_request_draft') || 'null');
+    const out = document.querySelector('#summary');
+    const btn = document.querySelector('#submit');
+
+    if (!d) {
+        location.href = 'request.html';
+    } else {
+        out.innerHTML = `
+            <section class="card">
+                <h3 style="font-size:1.1rem; font-weight:700; color:var(--primary-teal);">${UI.escape(d.service?.name || 'Roadside Assistance')}</h3>
+                <p class="muted" style="margin-top:4px;">${UI.escape(d.service?.description || 'Roadside dispatch requested')}</p>
+                <div class="divider"></div>
+                <div class="meta-row">
+                    <span>${UI.icon('car')}<strong>Vehicle:</strong> ${UI.escape(d.vehicle_type)}</span>
+                    <span>${UI.icon('map')}<strong>Location:</strong> ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}</span>
+                    <span>${UI.icon('clock')}<strong>Base Price:</strong> ${Number(d.service?.base_price || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                </div>
+                <div style="background:var(--bg-light); padding:12px; border-radius:var(--radius-md); margin-top:12px; font-size:0.85rem;">
+                    <strong>Issue Note:</strong> ${UI.escape(d.description)}
+                </div>
+            </section>
+        `;
+    }
+
+    btn.onclick = async () => {
+        btn.disabled = true;
+        btn.textContent = 'Dispatching nearby responders…';
+        try {
+            const r = await API.post('/tickets', d);
+            if (!r.ticket?.id) throw Error('No ticket returned by dispatch engine');
+            localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID, r.ticket.id);
+            sessionStorage.removeItem('rs_request_draft');
+            location.href = 'tracking.html';
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Submit Assistance Request`;
+            UI.alert(message, e.message || 'Your request could not be created.');
+        }
+    };
+</script>
+</body>
+</html>

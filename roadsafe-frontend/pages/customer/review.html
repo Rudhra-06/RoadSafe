@@ -1,1 +1,86 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rate service</title><link rel="stylesheet" href="../../css/styles.css"></head><body><main class="pwa-container"><header class="header"><span class="header-title">Rate your service</span></header><section class="content-body"><div class="page-heading"><h1>How was your assistance?</h1><p>Your review helps us improve provider quality.</p></div><div id="message"></div><form id="reviewForm"><label>Rating</label><select id="rating" class="input-field"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Fair</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><label>Comment</label><textarea id="comment" class="input-field" maxlength="2000"></textarea><button class="btn btn-primary">Submit review</button></form></section></main><script src="../../js/config.js"></script><script src="../../js/api.js"></script><script src="../../js/auth.js"></script><script src="../../js/app.js"></script><script src="../../js/ui.js"></script><script>const ticketId=new URLSearchParams(window.location.search).get('ticket_id'),form=document.querySelector('#reviewForm');if(!ticketId)window.location.href='history.html';form.onsubmit=async e=>{e.preventDefault();try{await API.post('/reviews',{ticket_id:ticketId,rating:Number(rating.value),comment:comment.value||null});UI.alert(message,'Thank you. Your review has been recorded.','success');form.reset()}catch(err){UI.alert(message,err.message||'Review could not be saved.')}};</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Rate Service — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="home.html" class="header-back" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Rate Service</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body">
+        <div class="page-heading">
+            <h1>How Was Your Service?</h1>
+            <p>Your rating directly impacts provider dispatch priority.</p>
+        </div>
+
+        <div id="message"></div>
+
+        <form id="reviewForm" class="card" style="padding:20px;">
+            <div class="form-group">
+                <label class="form-label" for="rating">Service Quality Rating</label>
+                <select id="rating" class="input-field">
+                    <option value="5">5 Star — Exceptional</option>
+                    <option value="4">4 Star — Good &amp; Professional</option>
+                    <option value="3">3 Star — Satisfactory</option>
+                    <option value="2">2 Star — Needs Improvement</option>
+                    <option value="1">1 Star — Unsatisfactory</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="comment">Feedback / Comments</label>
+                <textarea id="comment" class="input-field" maxlength="2000" placeholder="Tell us how the technician handled your roadside assistance..." rows="4"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top:12px;">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Submit Provider Review
+            </button>
+        </form>
+
+        <div style="text-align:center; margin-top:20px;">
+            <a href="home.html" class="btn btn-outline">Return to Dashboard</a>
+        </div>
+    </section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const ticketId = new URLSearchParams(window.location.search).get('ticket_id');
+    const form = document.querySelector('#reviewForm');
+
+    if (!ticketId) window.location.href = 'history.html';
+
+    form.onsubmit = async e => {
+        e.preventDefault();
+        try {
+            await API.post('/reviews', {
+                ticket_id: ticketId,
+                rating: Number(document.getElementById('rating').value),
+                comment: document.getElementById('comment').value || null
+            });
+            UI.alert(document.getElementById('message'), 'Thank you! Your feedback has been recorded.', 'success');
+            form.reset();
+        } catch (err) {
+            UI.alert(document.getElementById('message'), err.message || 'Review could not be saved.');
+        }
+    };
+</script>
+</body>
+</html>

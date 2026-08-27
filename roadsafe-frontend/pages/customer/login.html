@@ -1,54 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoadSafe - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Sign in to RoadSafe to request roadside assistance.">
+    <title>Sign In — RoadSafe Customer</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        body { background: linear-gradient(160deg, #f5edf4 0%, #f7f8fa 60%); min-height: 100vh; }
+        .login-card {
+            background: var(--surface-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 32px 24px 36px;
+            width: 100%; max-width: 420px;
+            margin: 0 auto;
+        }
+        .brand-logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary-teal), var(--accent-teal));
+            border-radius: var(--radius-xl);
+            display: grid; place-items: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 14px rgba(113,75,103,.3);
+        }
+        .brand-logo svg { width: 32px; height: 32px; stroke: #fff; fill: none; }
+    </style>
 </head>
+<body style="align-items:center; padding: 24px 16px;">
+<main style="width:100%; max-width:420px; margin:auto;">
+    <div class="login-card">
+        <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13V7m0 13l6-3m-6-10l6-3m0 13l5.447 2.724A1 1 0 0 0 21 19.382V8.618a1 1 0 0 0-.553-.894L15 5m0 12V5"/></svg>
+        </div>
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle">Sign in to request roadside assistance</p>
 
-<body>
-    <div class="pwa-container" style="justify-content: center;">
-        <div style="padding: 24px; text-align: center;">
-            <h1 style="color: var(--primary-teal); margin-bottom: 8px;">RoadSafe GPS</h1>
-            <p style="color: var(--text-secondary); margin-bottom: 24px;">Sign in to request roadside assistance</p>
+        <div id="errorBox" class="alert alert-error" role="alert" style="display:none;"></div>
 
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <input type="email" class="input-field" id="email" placeholder="Email Address" required>
-                <input type="password" class="input-field" id="password" placeholder="Password" required>
-
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Sign In</button>
-            </form>
-
-            <div style="margin-top: 20px; font-size: 0.85rem;">
-                <p>Don't have an account? <a href="register.html" style="color: var(--primary-teal);">Register here</a>
-                </p>
-                <p style="margin-top: 8px;"><a href="../worker/login.html" style="color: var(--text-secondary);">Worker
-                        Login</a> | <a href="../admin/login.html" style="color: var(--text-secondary);">Admin Login</a>
-                </p>
+        <form id="loginForm" class="auth-form" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address <span class="req" style="color:var(--danger-red);">*</span></label>
+                <input type="email" class="input-field" id="email" placeholder="jane@example.com"
+                       required autocomplete="email">
             </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password <span class="req" style="color:var(--danger-red);">*</span></label>
+                <input type="password" class="input-field" id="password" placeholder="••••••••"
+                       required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary" id="loginBtn" style="margin-top:4px;">
+                <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+                Sign In
+            </button>
+        </form>
+
+        <div class="auth-links">
+            <p>Don't have an account? <a href="register.html">Create one free</a></p>
+            <p style="margin-top:10px;">
+                <a href="../worker/login.html" style="color:var(--text-secondary); font-size:.82rem;">Worker sign in</a>
+                &nbsp;·&nbsp;
+                <a href="../admin/login.html" style="color:var(--text-secondary); font-size:.82rem;">Admin portal</a>
+            </p>
         </div>
     </div>
+</main>
 
-    <script src="../../js/config.js"></script>
-    <script src="../../js/api.js"></script>
-    <script src="../../js/offline.js"></script>
-    <script src="../../js/auth.js"></script>
-    <script>
-        async function handleLogin(e) {
-            e.preventDefault();
-            try {
-                await Auth.login({
-                    email: document.getElementById('email').value,
-                    password: document.getElementById('password').value,
-                    role: 'CUSTOMER'
-                });
-            } catch (err) {
-                alert("Invalid login credentials.");
-            }
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn  = document.getElementById('loginBtn');
+    const errorBox  = document.getElementById('errorBox');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorBox.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Signing in…';
+
+        try {
+            await Auth.login({
+                email:    document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value
+            });
+        } catch (err) {
+            errorBox.textContent = err.message || 'Invalid email or password. Please try again.';
+            errorBox.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Sign In`;
         }
-    </script>
+    });
+</script>
 </body>
-
 </html>
