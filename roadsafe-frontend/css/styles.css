@@ -35,10 +35,8 @@ body {
     color: var(--text-primary);
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 a { color: var(--primary-teal); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -56,10 +54,21 @@ button:disabled { cursor: wait; opacity: .6; pointer-events: none; }
     position: relative;
     overflow-x: hidden;
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
+    margin: 0 auto;
 }
 /* Pages without bottom nav should not have extra bottom padding */
 .pwa-container.no-bottom-nav {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── Auth / Register pages ─────────────────────────────────── */
+/* Used on login + register pages to center the card */
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    width: 100%;
 }
 
 /* Auth pages centering wrapper */
@@ -412,8 +421,7 @@ select.input-field { cursor: pointer; }
 
 /* ─── Responsive: tablet+ breakpoint for PWA container ──────── */
 @media (min-width: 500px) {
-    body { align-items: stretch; }
-    .pwa-container { max-width: 480px; min-height: 100vh; margin: auto; box-shadow: var(--shadow-lg); }
+    .pwa-container { max-width: 480px; box-shadow: var(--shadow-lg); }
     .bottom-nav { max-width: 480px; }
     .service-grid, .provider-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .content-body { padding: 24px 20px; }
