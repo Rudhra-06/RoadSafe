@@ -28,11 +28,18 @@ class DispatchService:
         if not candidates:
             return None
 
+        latest_locations = {}
+        for responder, location in candidates:
+            current = latest_locations.get(responder.id)
+            if current is None or location.created_at > current.created_at:
+                latest_locations[responder.id] = location
+
         scored = [
             (responder, 100.0 / max(haversine_distance(
                 ticket.latitude, ticket.longitude, location.latitude, location.longitude
             ), 0.1))
-            for responder, location in candidates
+            for responder in {item[0].id: item[0] for item in candidates}.values()
+            for location in [latest_locations[responder.id]]
         ]
         return max(scored, key=lambda candidate: candidate[1])
 

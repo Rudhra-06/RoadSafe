@@ -11,16 +11,29 @@ const OfflineManager = {
     },
 
     async syncQueue() {
-        const queue = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.OFFLINE_QUEUE) || "[]");
+        let queue;
+        try {
+            queue = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.OFFLINE_QUEUE) || "[]");
+        } catch (_) {
+            queue = [];
+        }
         if (queue.length === 0) return;
 
+        const remaining = [];
         for (const req of queue) {
             try {
-                await fetch(`${CONFIG.API_BASE_URL}${req.endpoint}`, req.options);
+                const response = await fetch(`${CONFIG.API_BASE_URL}${req.endpoint}`, req.options);
+                if (!response.ok) {
+                    remaining.push(req);
+                }
             } catch (err) {
                 console.error("Failed sync attempt", err);
-                return;
+                remaining.push(req);
             }
+        }
+        if (remaining.length) {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(remaining));
+            return;
         }
         localStorage.removeItem(CONFIG.STORAGE_KEYS.OFFLINE_QUEUE);
         alert("Offline transactions synchronized successfully!");

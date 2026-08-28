@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.db.database import get_db, SessionLocal
+from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.utils.enums import UserRole
 from app.core.security import get_password_hash
@@ -14,7 +14,7 @@ async def seed_admin():
     password = input("Admin Password: ")
     full_name = input("Admin Full Name: ")
 
-    async with SessionLocal() as db:
+    async with AsyncSessionLocal() as db:
         from sqlalchemy.future import select
         result = await db.execute(select(User).filter(User.email == email))
         existing_user = result.scalars().first()

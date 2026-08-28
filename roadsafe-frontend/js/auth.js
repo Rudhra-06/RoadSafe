@@ -5,10 +5,12 @@ const Auth = {
                 username: credentials.email,
                 password: credentials.password
             });
-            if (data.access_token) {
+            if (data.access_token && data.user && data.user.role) {
                 localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN, data.access_token);
                 localStorage.setItem(CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(data.user));
                 this.redirectUser(data.user.role);
+            } else {
+                throw new Error("Login response did not include a valid user.");
             }
             return data;
         } catch (err) {
@@ -29,7 +31,14 @@ const Auth = {
 
     getUser() {
         const rawData = localStorage.getItem(CONFIG.STORAGE_KEYS.USER_DATA);
-        return rawData ? JSON.parse(rawData) : null;
+        if (!rawData) return null;
+        try {
+            const user = JSON.parse(rawData);
+            return user && typeof user === "object" && user.role ? user : null;
+        } catch (_) {
+            localStorage.removeItem(CONFIG.STORAGE_KEYS.USER_DATA);
+            return null;
+        }
     },
 
     redirectUser(role) {
@@ -48,7 +57,7 @@ const Auth = {
 
         // Allow public pages (login pages, index)
         const isPublic = path === "/" || path.endsWith("/index.html") || path.includes("/login.html") || path.includes("/register.html");
-        
+
         if (!user && !isPublic) {
             console.warn("Unauthorized access. Redirecting to login.");
             this.logout();

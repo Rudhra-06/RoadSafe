@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
@@ -14,12 +15,27 @@ from app.schemas.ticket import (
 )
 from app.services.ticket_service import TicketService
 from app.utils.enums import UserRole
+from app.models.ticket_assignment import TicketAssignment
+from app.models.responder import Responder
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
 
 customer_or_staff = RoleChecker([UserRole.CUSTOMER, UserRole.MANAGER, UserRole.ADMIN])
 manager_or_admin = RoleChecker([UserRole.MANAGER, UserRole.ADMIN])
 responder_only = RoleChecker([UserRole.RESPONDER])
+
+
+async def _can_access_ticket(db, ticket, claims):
+    role = claims["role"]
+    if role in (UserRole.ADMIN.value, UserRole.MANAGER.value) or ticket.customer_id == claims["user_id"]:
+        return True
+    result = await db.execute(
+        select(TicketAssignment.id).join(Responder).where(
+            TicketAssignment.ticket_id == ticket.id,
+            Responder.user_id == claims["user_id"],
+        )
+    )
+    return result.scalar_one_or_none() is not None
 
 
 @router.get("", response_model=list[TicketRead])
@@ -54,6 +70,8 @@ async def get_ticket(
     Retrieve full details for a ticket, including state transition logs and assignments.
     """
     ticket = await TicketService.get_ticket_by_id(db, ticket_id)
+    if not await _can_access_ticket(db, ticket, claims):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot access this ticket")
     return ticket
 
 
@@ -68,6 +86,9 @@ async def update_ticket_status(
     Update ticket status. Validates transition against the frozen state machine rules.
     """
     user_id = claims["user_id"]
+    ticket = await TicketService.get_ticket_by_id(db, ticket_id)
+    if not await _can_access_ticket(db, ticket, claims):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot update this ticket")
     updated_ticket = await TicketService.update_ticket_status(
         db, ticket_id, status_update.status, user_id, status_update.reason
     )
