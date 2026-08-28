@@ -1,8 +1,10 @@
-const CACHE_NAME = "roadsafe-v1";
+const CACHE_NAME = "roadsafe-v2";
 const ASSETS_TO_CACHE = [
     "/",
     "/index.html",
     "/manifest.json",
+    "/assets/icons/icon-192.png",
+    "/assets/icons/icon-512.png",
     "/css/styles.css",
     "/js/config.js",
     "/js/api.js",

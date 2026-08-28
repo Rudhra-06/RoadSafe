@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,108 +8,146 @@
     <title>Worker Sign In — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
     <style>
+<<<<<<< HEAD
         body { background: #ffffff; }
+=======
+        body {
+            background: #fff;
+        }
+
+>>>>>>> divu
         .login-card {
             background: var(--surface-white);
             border-radius: var(--radius-xl);
             box-shadow: var(--shadow-lg);
             padding: 32px 24px 36px;
-            width: 100%; max-width: 420px;
+            width: 100%;
+            max-width: 420px;
             margin: 0 auto;
         }
+
         .brand-logo {
-            width: 64px; height: 64px;
+            width: 64px;
+            height: 64px;
             background: linear-gradient(135deg, var(--primary-teal), var(--accent-teal));
             border-radius: var(--radius-xl);
-            display: grid; place-items: center;
+            display: grid;
+            place-items: center;
             margin: 0 auto 20px;
-            box-shadow: 0 4px 14px rgba(113,75,103,.35);
+            box-shadow: 0 4px 14px rgba(113, 75, 103, .35);
         }
-        .brand-logo svg { width: 32px; height: 32px; stroke: #fff; fill: none; }
+
+        .brand-logo svg {
+            width: 32px;
+            height: 32px;
+            stroke: #fff;
+            fill: none;
+        }
+
         .worker-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: var(--accent-light); color: var(--primary-teal);
-            border-radius: 20px; padding: 4px 12px; font-size: .78rem;
-            font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-light);
+            color: var(--primary-teal);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
             margin-bottom: 16px;
         }
     </style>
 </head>
+
 <body>
-<main style="width:100%;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:32px 16px;">
-<div style="width:100%;max-width:420px;">
-    <div class="login-card">
-        <div class="brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
-        </div>
-        <div style="text-align:center;">
-            <div class="worker-badge">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
-                Provider Portal
+    <main style="width:100%;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:32px 16px;">
+        <div style="width:100%;max-width:420px;">
+            <div class="login-card">
+                <div class="brand-logo" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                            d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z" />
+                    </svg>
+                </div>
+                <div style="text-align:center;">
+                    <div class="worker-badge">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z" />
+                        </svg>
+                        Provider Portal
+                    </div>
+                </div>
+                <h1 class="auth-title">Welcome back</h1>
+                <p class="auth-subtitle">Sign in to manage jobs and dispatch</p>
+
+                <div id="errorBox" class="alert alert-error" role="alert" style="display:none;"></div>
+
+                <form id="workerLoginForm" class="auth-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address <span
+                                style="color:var(--danger-red);">*</span></label>
+                        <input type="email" class="input-field" id="email" placeholder="you@example.com" required
+                            autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password <span
+                                style="color:var(--danger-red);">*</span></label>
+                        <input type="password" class="input-field" id="password" placeholder="••••••••" required
+                            autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="loginBtn" style="margin-top:4px;">
+                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                        </svg>
+                        Sign In to Dashboard
+                    </button>
+                </form>
+
+                <div class="auth-links">
+                    <p>New provider? <a href="register.html">Register here</a></p>
+                    <p style="margin-top:10px;">
+                        <a href="../customer/login.html" style="color:var(--text-secondary);font-size:.82rem;">Customer
+                            login</a>
+                        &nbsp;·&nbsp;
+                        <a href="../admin/login.html" style="color:var(--text-secondary);font-size:.82rem;">Admin
+                            portal</a>
+                    </p>
+                </div>
             </div>
         </div>
-        <h1 class="auth-title">Welcome back</h1>
-        <p class="auth-subtitle">Sign in to manage jobs and dispatch</p>
+    </main>
 
-        <div id="errorBox" class="alert alert-error" role="alert" style="display:none;"></div>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/offline.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        const form = document.getElementById('workerLoginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorBox = document.getElementById('errorBox');
 
-        <form id="workerLoginForm" class="auth-form" novalidate>
-            <div class="form-group">
-                <label class="form-label" for="email">Email Address <span style="color:var(--danger-red);">*</span></label>
-                <input type="email" class="input-field" id="email" placeholder="you@example.com"
-                       required autocomplete="email">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="password">Password <span style="color:var(--danger-red);">*</span></label>
-                <input type="password" class="input-field" id="password" placeholder="••••••••"
-                       required autocomplete="current-password">
-            </div>
-            <button type="submit" class="btn btn-primary" id="loginBtn" style="margin-top:4px;">
-                <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-                Sign In to Dashboard
-            </button>
-        </form>
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in…';
 
-        <div class="auth-links">
-            <p>New provider? <a href="register.html">Register here</a></p>
-            <p style="margin-top:10px;">
-                <a href="../customer/login.html" style="color:var(--text-secondary);font-size:.82rem;">Customer login</a>
-                &nbsp;·&nbsp;
-                <a href="../admin/login.html" style="color:var(--text-secondary);font-size:.82rem;">Admin portal</a>
-            </p>
-        </div>
-    </div>
-</div>
-</main>
-
-<script src="../../js/config.js"></script>
-<script src="../../js/api.js"></script>
-<script src="../../js/offline.js"></script>
-<script src="../../js/auth.js"></script>
-<script>
-    const form     = document.getElementById('workerLoginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    const errorBox = document.getElementById('errorBox');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorBox.style.display = 'none';
-        loginBtn.disabled = true;
-        loginBtn.textContent = 'Signing in…';
-
-        try {
-            await Auth.login({
-                email:    document.getElementById('email').value.trim(),
-                password: document.getElementById('password').value
-            });
-            // Auth.login redirects on success via Auth.redirectUser
-        } catch (err) {
-            errorBox.textContent = err.message || 'Invalid email or password. Please try again.';
-            errorBox.style.display = 'block';
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Sign In to Dashboard`;
-        }
-    });
-</script>
+            try {
+                await Auth.login({
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value
+                });
+                // Auth.login redirects on success via Auth.redirectUser
+            } catch (err) {
+                errorBox.textContent = err.message || 'Invalid email or password. Please try again.';
+                errorBox.style.display = 'block';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Sign In to Dashboard`;
+            }
+        });
+    </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -18,165 +19,262 @@
             justify-content: space-between;
             gap: 12px;
         }
-        .avail-left { flex: 1; }
-        .avail-left strong { display: block; font-size: .95rem; font-weight: 600; }
-        .avail-left span { font-size: .82rem; color: var(--text-secondary); }
+
+        .avail-left {
+            flex: 1;
+        }
+
+        .avail-left strong {
+            display: block;
+            font-size: .95rem;
+            font-weight: 600;
+        }
+
+        .avail-left span {
+            font-size: .82rem;
+            color: var(--text-secondary);
+        }
+
         /* Toggle switch */
-        .toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .toggle {
-            position: relative; width: 48px; height: 26px;
+            position: relative;
+            width: 48px;
+            height: 26px;
             display: inline-block;
         }
-        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .slider {
-            position: absolute; inset: 0;
-            background: var(--border-light); border-radius: 26px;
-            cursor: pointer; transition: background .2s;
+            position: absolute;
+            inset: 0;
+            background: var(--border-light);
+            border-radius: 26px;
+            cursor: pointer;
+            transition: background .2s;
         }
+
         .slider::before {
-            content: ''; position: absolute;
-            width: 20px; height: 20px; left: 3px; bottom: 3px;
-            background: white; border-radius: 50%;
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
             transition: transform .2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
         }
-        .toggle input:checked + .slider { background: var(--success-green); }
-        .toggle input:checked + .slider::before { transform: translateX(22px); }
+
+        .toggle input:checked+.slider {
+            background: var(--success-green);
+        }
+
+        .toggle input:checked+.slider::before {
+            transform: translateX(22px);
+        }
+
         .incoming-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: #fee2e2; color: var(--danger-red);
-            border-radius: 20px; padding: 4px 10px;
-            font-size: .75rem; font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fee2e2;
+            color: var(--danger-red);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: .75rem;
+            font-weight: 700;
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .7; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .7;
+            }
         }
     </style>
 </head>
+
 <body>
-<main class="pwa-container">
+    <main class="pwa-container">
 
-    <!-- Header -->
-    <header class="header">
-        <span class="header-title" id="shopTitle">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:4px;vertical-align:middle;">
-                <path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/>
-            </svg>
-            Dashboard
-        </span>
-        <a href="notifications.html" class="header-icon" aria-label="Notifications">
-            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
-        </a>
-    </header>
+        <!-- Header -->
+        <header class="header">
+            <span class="header-title" id="shopTitle">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"
+                    style="margin-right:4px;vertical-align:middle;">
+                    <path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z" />
+                </svg>
+                Dashboard
+            </span>
+            <a href="notifications.html" class="header-icon" aria-label="Notifications">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4" />
+                </svg>
+            </a>
+        </header>
 
-    <!-- Content -->
-    <section class="content-body">
+        <!-- Content -->
+        <section class="content-body">
 
-        <!-- Availability Card -->
-        <div class="avail-card" id="availCard">
-            <div class="avail-left">
-                <strong id="availStatus">Checking status…</strong>
-                <span id="availText">Updating…</span>
+            <!-- Availability Card -->
+            <div class="avail-card" id="availCard">
+                <div class="avail-left">
+                    <strong id="availStatus">Checking status…</strong>
+                    <span id="availText">Updating…</span>
+                </div>
+                <div class="toggle-wrap">
+                    <span style="font-size:.78rem;color:var(--text-secondary);" id="toggleLabel">Off</span>
+                    <label class="toggle" aria-label="Toggle availability">
+                        <input type="checkbox" id="availToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
-            <div class="toggle-wrap">
-                <span style="font-size:.78rem;color:var(--text-secondary);" id="toggleLabel">Off</span>
-                <label class="toggle" aria-label="Toggle availability">
-                    <input type="checkbox" id="availToggle">
-                    <span class="slider"></span>
-                </label>
+
+            <!-- Message area -->
+            <div id="message"></div>
+
+            <!-- Jobs Section -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <p class="section-title" style="margin:0;">Incoming &amp; Active Jobs</p>
+                <button class="btn btn-outline btn-inline" onclick="load()"
+                    style="font-size:.78rem;padding:6px 12px;min-height:34px;">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <polyline points="23 4 23 10 17 10" />
+                        <path d="M20.49 15a9 9 0 1 1-.07-5.59" />
+                    </svg>
+                    Refresh
+                </button>
             </div>
-        </div>
 
-        <!-- Message area -->
-        <div id="message"></div>
+            <div id="jobs">
+                <div class="state">
+                    <div class="spinner"></div>
+                    <p>Loading jobs…</p>
+                </div>
+            </div>
 
-        <!-- Jobs Section -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <p class="section-title" style="margin:0;">Incoming &amp; Active Jobs</p>
-            <button class="btn btn-outline btn-inline" onclick="load()" style="font-size:.78rem;padding:6px 12px;min-height:34px;">
-                <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.07-5.59"/></svg>
-                Refresh
-            </button>
-        </div>
+        </section>
 
-        <div id="jobs">
-            <div class="state"><div class="spinner"></div><p>Loading jobs…</p></div>
-        </div>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav" aria-label="Worker navigation">
+            <a href="dashboard.html" class="nav-item active" aria-current="page">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Jobs
+            </a>
+            <a href="job-history.html" class="nav-item">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+                </svg>
+                History
+            </a>
+            <a href="notifications.html" class="nav-item">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4" />
+                </svg>
+                Alerts
+            </a>
+            <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                </svg>
+                Logout
+            </a>
+        </nav>
+    </main>
 
-    </section>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/offline.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/ui.js"></script>
+    <script>
+        Auth.guardRoute();
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav" aria-label="Worker navigation">
-        <a href="dashboard.html" class="nav-item active" aria-current="page">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Jobs
-        </a>
-        <a href="job-history.html" class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-            History
-        </a>
-        <a href="notifications.html" class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
-            Alerts
-        </a>
-        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
-            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
-            Logout
-        </a>
-    </nav>
-</main>
+        const jobsEl = document.getElementById('jobs');
+        const msgEl = document.getElementById('message');
+        const toggle = document.getElementById('availToggle');
+        const availStatus = document.getElementById('availStatus');
+        const availText = document.getElementById('availText');
+        const toggleLabel = document.getElementById('toggleLabel');
 
-<script src="../../js/config.js"></script>
-<script src="../../js/api.js"></script>
-<script src="../../js/offline.js"></script>
-<script src="../../js/auth.js"></script>
-<script src="../../js/app.js"></script>
-<script src="../../js/ui.js"></script>
-<script>
-    Auth.guardRoute();
+        function setAvailUI(isOn) {
+            availStatus.textContent = isOn ? 'Available for Dispatch' : 'Unavailable';
+            availText.textContent = isOn ? 'You will receive incoming job requests.' : 'Toggle on to start accepting jobs.';
+            toggleLabel.textContent = isOn ? 'On' : 'Off';
+            availStatus.style.color = isOn ? 'var(--success-green)' : 'var(--text-secondary)';
+        }
 
-    const jobsEl   = document.getElementById('jobs');
-    const msgEl    = document.getElementById('message');
-    const toggle   = document.getElementById('availToggle');
-    const availStatus = document.getElementById('availStatus');
-    const availText   = document.getElementById('availText');
-    const toggleLabel = document.getElementById('toggleLabel');
-
-    function setAvailUI(isOn) {
-        availStatus.textContent = isOn ? 'Available for Dispatch' : 'Unavailable';
-        availText.textContent   = isOn ? 'You will receive incoming job requests.' : 'Toggle on to start accepting jobs.';
-        toggleLabel.textContent = isOn ? 'On' : 'Off';
-        availStatus.style.color = isOn ? 'var(--success-green)' : 'var(--text-secondary)';
-    }
-
-    async function load() {
-        UI.loading(jobsEl, 'Loading assigned jobs…');
-        try {
-            const profile = await API.get('/responders/me');
-            const shopTitle = document.getElementById('shopTitle');
-            if (profile.shop_name) {
-                shopTitle.innerHTML = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:4px;vertical-align:middle;"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>${UI.escape(profile.shop_name)}`;
-            }
-            const isOn = profile.is_available && profile.is_online;
-            toggle.checked = isOn;
-            setAvailUI(isOn);
-
-            const tickets = await API.get('/tickets');
-            const cards = tickets.filter(t =>
-                t.assignments?.some(a => a.status === 'OFFERED') ||
-                ['ACCEPTED','EN_ROUTE','ARRIVED','IN_SERVICE'].includes(t.status)
-            );
-
-            if (!cards.length) {
-                jobsEl.innerHTML = '<div class="empty-state">No incoming or active jobs right now.<br><small style="margin-top:8px;display:block;">Make sure you are marked as Available above.</small></div>';
+        function startLocationTracking() {
+            if (!navigator.geolocation) {
+                UI.alert(msgEl, 'This browser does not support location services.');
                 return;
             }
+            navigator.geolocation.watchPosition(async position => {
+                try {
+                    await API.patch('/responders/location', {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    });
+                } catch (err) {
+                    console.error('Responder location update failed:', err);
+                }
+            }, () => {
+                UI.alert(msgEl, 'Location permission is required to receive nearby job offers.');
+            }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
+        }
 
-            jobsEl.innerHTML = cards.map(t => {
-                const isOffer = t.assignments?.some(a => a.status === 'OFFERED');
-                return `
+        async function load() {
+            UI.loading(jobsEl, 'Loading assigned jobs…');
+            try {
+                const profile = await API.get('/responders/me');
+                const shopTitle = document.getElementById('shopTitle');
+                if (profile.shop_name) {
+                    shopTitle.innerHTML = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:4px;vertical-align:middle;"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>${UI.escape(profile.shop_name)}`;
+                }
+                const isOn = profile.is_available && profile.is_online;
+                toggle.checked = isOn;
+                setAvailUI(isOn);
+
+                const tickets = await API.get('/tickets');
+                const cards = tickets.filter(t =>
+                    t.assignments?.some(a => a.status === 'OFFERED') ||
+                    ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_SERVICE'].includes(t.status)
+                );
+
+                if (!cards.length) {
+                    jobsEl.innerHTML = '<div class="empty-state">No incoming or active jobs right now.<br><small style="margin-top:8px;display:block;">Make sure you are marked as Available above.</small></div>';
+                    return;
+                }
+
+                jobsEl.innerHTML = cards.map(t => {
+                    const isOffer = t.assignments?.some(a => a.status === 'OFFERED');
+                    return `
                 <article class="job-card">
                     <div class="job-card-header">
                         <h3>${UI.escape(t.description)}</h3>
@@ -206,43 +304,45 @@
                         }
                     </div>
                 </article>`;
-            }).join('');
-        } catch (err) {
-            UI.alert(msgEl, err.message || 'Jobs could not be loaded. Please retry.');
-            jobsEl.innerHTML = '';
-        }
-    }
-
-    // Availability toggle
-    toggle.addEventListener('change', async () => {
-        toggle.disabled = true;
-        const isOn = toggle.checked;
-        try {
-            await API.patch('/responders/availability', { is_available: isOn, is_online: isOn });
-            setAvailUI(isOn);
-        } catch (err) {
-            toggle.checked = !isOn;
-            UI.alert(msgEl, err.message || 'Availability could not be updated.');
-        } finally {
-            toggle.disabled = false;
-        }
-    });
-
-    async function respond(id, accepted) {
-        try {
-            await API.post(`/tickets/${id}/assignment/respond`, { accepted });
-            if (accepted) {
-                localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID, id);
-                location.href = 'active-job.html?id=' + id;
-            } else {
-                load();
+                }).join('');
+            } catch (err) {
+                UI.alert(msgEl, err.message || 'Jobs could not be loaded. Please retry.');
+                jobsEl.innerHTML = '';
             }
-        } catch (err) {
-            UI.alert(msgEl, err.message || 'Job response failed.');
         }
-    }
 
-    load();
-</script>
+        // Availability toggle
+        toggle.addEventListener('change', async () => {
+            toggle.disabled = true;
+            const isOn = toggle.checked;
+            try {
+                await API.patch('/responders/availability', { is_available: isOn, is_online: isOn });
+                setAvailUI(isOn);
+            } catch (err) {
+                toggle.checked = !isOn;
+                UI.alert(msgEl, err.message || 'Availability could not be updated.');
+            } finally {
+                toggle.disabled = false;
+            }
+        });
+
+        async function respond(id, accepted) {
+            try {
+                await API.post(`/tickets/${id}/assignment/respond`, { accepted });
+                if (accepted) {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID, id);
+                    location.href = 'active-job.html?id=' + id;
+                } else {
+                    load();
+                }
+            } catch (err) {
+                UI.alert(msgEl, err.message || 'Job response failed.');
+            }
+        }
+
+        startLocationTracking();
+        load();
+    </script>
 </body>
+
 </html>

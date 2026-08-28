@@ -141,6 +141,16 @@ class ResponderService:
         return nearby_responders
 
     @staticmethod
+    async def list_responders(db: AsyncSession):
+        result = await db.execute(
+            select(Responder).options(
+                selectinload(Responder.skills),
+                selectinload(Responder.user),
+            ).order_by(Responder.created_at.desc())
+        )
+        return result.scalars().all()
+
+    @staticmethod
     async def get_public_responder(db: AsyncSession, responder_id: str):
         result = await db.execute(select(Responder).options(selectinload(Responder.skills), selectinload(Responder.locations), selectinload(Responder.user)).filter(Responder.id == responder_id))
         responder = result.scalars().first()

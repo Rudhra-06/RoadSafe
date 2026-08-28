@@ -25,7 +25,11 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+<<<<<<< HEAD
 
 # Runtime log files
 uvicorn.log
 *.log
+=======
+uvicorn.log
+>>>>>>> divu

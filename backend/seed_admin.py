@@ -9,7 +9,10 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+<<<<<<< HEAD
 from sqlalchemy.future import select
+=======
+>>>>>>> divu
 from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.utils.enums import UserRole
@@ -20,6 +23,7 @@ ADMIN_PASSWORD = "admin"
 ADMIN_FULL_NAME = "RoadSafe Admin"
 ADMIN_PHONE = "0000000000"
 
+<<<<<<< HEAD
 
 async def seed_admin():
     async with AsyncSessionLocal() as db:
@@ -27,6 +31,15 @@ async def seed_admin():
         existing = result.scalars().first()
         if existing:
             print(f"[seed] Admin '{ADMIN_EMAIL}' already exists — skipping.")
+=======
+    async with AsyncSessionLocal() as db:
+        from sqlalchemy.future import select
+        result = await db.execute(select(User).filter(User.email == email))
+        existing_user = result.scalars().first()
+        
+        if existing_user:
+            print(f"User with email {email} already exists!")
+>>>>>>> divu
             return
         admin = User(
             email=ADMIN_EMAIL,

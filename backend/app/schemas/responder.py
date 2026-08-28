@@ -43,7 +43,6 @@ class ResponderCreate(BaseModel):
     type: ResponderType
     skills: List[str] = []
 
-
 class ResponderRead(BaseModel):
     id: str
     user_id: str
@@ -77,3 +76,15 @@ class ResponderNearbyRead(BaseModel):
 
 class ResponderPublicRead(ResponderNearbyRead):
     phone_number: Optional[str] = None
+
+
+class ResponderAdminRead(BaseModel):
+    id: str
+    user_id: str
+    type: ResponderType
+    is_available: bool
+    is_online: bool
+    full_name: str
+    shop_name: Optional[str] = None
+    shop_address: Optional[str] = None
+    skills: List[str] = []

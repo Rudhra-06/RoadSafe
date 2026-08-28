@@ -14,6 +14,7 @@ from app.schemas.responder import (
     ResponderLocationRead,
     ResponderNearbyRead,
     ResponderPublicRead,
+    ResponderAdminRead,
     SkillCreate,
     SkillRead,
 )
@@ -25,6 +26,7 @@ router = APIRouter(prefix="/responders", tags=["Responders"])
 
 responder_only = RoleChecker([UserRole.RESPONDER])
 customer_or_staff = RoleChecker([UserRole.CUSTOMER, UserRole.MANAGER, UserRole.ADMIN])
+<<<<<<< HEAD
 admin_or_manager = RoleChecker([UserRole.ADMIN, UserRole.MANAGER])
 
 
@@ -52,6 +54,27 @@ async def list_all_responders(
             rd.latest_location = RLR.model_validate(latest)
         out.append(rd)
     return out
+=======
+staff_only = RoleChecker([UserRole.MANAGER, UserRole.ADMIN])
+
+
+@router.get("", response_model=List[ResponderAdminRead], dependencies=[Depends(staff_only)])
+async def list_responders(db: AsyncSession = Depends(get_db)):
+    return [
+        ResponderAdminRead(
+            id=responder.id,
+            user_id=responder.user_id,
+            type=responder.type,
+            is_available=responder.is_available,
+            is_online=responder.is_online,
+            full_name=responder.user.full_name,
+            shop_name=responder.shop_name,
+            shop_address=responder.shop_address,
+            skills=[skill.skill_name for skill in responder.skills],
+        )
+        for responder in await ResponderService.list_responders(db)
+    ]
+>>>>>>> divu
 
 
 @router.get("/nearby", response_model=List[ResponderNearbyRead], dependencies=[Depends(customer_or_staff)])
