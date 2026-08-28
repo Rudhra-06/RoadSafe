@@ -61,3 +61,16 @@ class AssignmentStatus(str, Enum):
     REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"
     EXPIRED = "EXPIRED"
+
+
+class InvoiceStatus(str, Enum):
+    PENDING = "PENDING"
+    PAID = "PAID"
+    VOID = "VOID"
+
+
+class PaymentStatus(str, Enum):
+    CREATED = "CREATED"
+    VERIFIED = "VERIFIED"
+    FAILED = "FAILED"
+

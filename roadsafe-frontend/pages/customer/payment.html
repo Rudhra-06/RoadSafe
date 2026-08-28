@@ -37,7 +37,8 @@
 <script>
     Auth.guardRoute();
 
-    const invoiceId = new URLSearchParams(window.location.search).get('invoice_id');
+    const params = new URLSearchParams(window.location.search);
+    const invoiceId = params.get('invoice_id') || params.get('ticket_id') || localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
     const host = document.querySelector('#invoice');
     const button = document.querySelector('#pay');
     const msgEl = document.getElementById('message');
@@ -140,7 +141,7 @@
                     contact: Auth.getUser()?.phone_number || ''
                 },
                 theme: {
-                    color: "#008080"
+                    color: "#714b67"
                 }
             };
 

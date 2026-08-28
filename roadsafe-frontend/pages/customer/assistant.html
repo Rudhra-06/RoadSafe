@@ -17,23 +17,23 @@
         <span style="width:48px;"></span>
     </header>
 
-    <section class="content-body" style="display:flex; flex-direction:column; min-height: calc(100vh - 130px);">
-        <div class="page-heading">
+    <section class="content-body" style="display:flex; flex-direction:column; height: calc(100vh - 128px); overflow:hidden; padding:16px;">
+        <div class="page-heading" style="margin-bottom:12px; flex-shrink:0;">
             <h1>Knowledge &amp; Safety Assistant</h1>
             <p>Instant guidance on roadside emergencies, safety precautions, and services.</p>
         </div>
 
-        <div style="margin-bottom:12px;">
-            <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">Suggested Questions:</p>
+        <div style="margin-bottom:12px; flex-shrink:0;">
+            <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Suggested Questions:</p>
             <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                <button class="chip" onclick="askPreset('What should I do if my tyre suddenly goes flat?')">Flat tyre guidance</button>
-                <button class="chip" onclick="askPreset('What should I do if my vehicle battery dies?')">Dead battery jump-start</button>
-                <button class="chip" onclick="askPreset('What services does RoadSafe provide?')">RoadSafe service catalog &amp; pricing</button>
-                <button class="chip" onclick="askPreset('What should I do if my engine overheats?')">Engine overheating safety</button>
+                <button class="chip" type="button" onclick="askPreset('What should I do if my tyre suddenly goes flat?')">Flat tyre guidance</button>
+                <button class="chip" type="button" onclick="askPreset('What should I do if my vehicle battery dies?')">Dead battery jump-start</button>
+                <button class="chip" type="button" onclick="askPreset('What services does RoadSafe provide?')">RoadSafe service catalog &amp; pricing</button>
+                <button class="chip" type="button" onclick="askPreset('What should I do if my engine overheats?')">Engine overheating safety</button>
             </div>
         </div>
 
-        <div id="chatHistory" style="flex:1; margin-bottom:16px; display:flex; flex-direction:column; gap:12px;">
+        <div id="chatHistory" style="flex:1; overflow-y:auto; padding-right:4px; margin-bottom:12px; display:flex; flex-direction:column; gap:12px;">
             <div class="card" style="border-left: 4px solid var(--primary-teal); background: #f8fafc;">
                 <h3 style="font-size:0.95rem; font-weight:600; margin-bottom:4px;">RoadSafe AI Assistant</h3>
                 <p style="font-size:0.88rem; color:var(--text-secondary);">
@@ -42,8 +42,8 @@
             </div>
         </div>
 
-        <form id="askForm" style="display:flex; gap:8px; margin-top:auto; position:sticky; bottom:70px; background:var(--bg-card); padding:8px 0;">
-            <input type="text" id="queryInput" class="input-field" placeholder="Ask about safety, tyre, battery, towing…" required style="flex:1;" />
+        <form id="askForm" style="display:flex; gap:8px; flex-shrink:0; background:var(--surface-white); padding-top:8px; border-top:1px solid var(--border-light);">
+            <input type="text" id="queryInput" class="input-field" placeholder="Ask about safety, tyre, battery, towing…" required style="flex:1;" autocomplete="off" />
             <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width:48px; padding:0 16px;">
                 <svg viewBox="0 0 24 24" style="stroke:#fff;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -58,6 +58,10 @@
         <a href="request.html" class="nav-item">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Assist
+        </a>
+        <a href="history.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
         </a>
         <a href="assistant.html" class="nav-item active" aria-current="page">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -89,7 +93,12 @@
 
     function askPreset(q) {
         input.value = q;
-        form.requestSubmit();
+        input.focus();
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
     }
 
     form.onsubmit = async (e) => {
@@ -116,7 +125,7 @@
         aiMsg.style.maxWidth = '95%';
         aiMsg.innerHTML = `<div class="state"><div class="spinner"></div><p style="font-size:0.85rem; margin-top:4px;">Retrieving verified knowledge…</p></div>`;
         historyEl.appendChild(aiMsg);
-        aiMsg.scrollIntoView({ behavior: 'smooth' });
+        historyEl.scrollTop = historyEl.scrollHeight;
 
         try {
             const resp = await API.post('/ai/ask', { question: query });
@@ -140,7 +149,8 @@
             aiMsg.innerHTML = `<p style="color:var(--danger-red); font-size:0.85rem;">Failed to get response: ${UI.escape(err.message || 'Error')}</p>`;
         } finally {
             sendBtn.disabled = false;
-            aiMsg.scrollIntoView({ behavior: 'smooth' });
+            historyEl.scrollTop = historyEl.scrollHeight;
+            input.focus();
         }
     };
 </script>

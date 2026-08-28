@@ -6,7 +6,8 @@ from sqlalchemy.future import select
 from app.models.responder import Responder
 from app.models.responder_location import ResponderLocation
 from app.models.ticket import Ticket
-from app.models.ticket_assignment import TicketAssignment, AssignmentStatus
+from app.models.ticket_assignment import TicketAssignment
+from app.utils.enums import AssignmentStatus
 from app.utils.distance import haversine_distance
 
 

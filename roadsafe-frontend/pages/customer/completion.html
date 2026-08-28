@@ -9,31 +9,58 @@
 </head>
 
 <body>
-    <div class="pwa-container">
-        <div class="header">
-            <span class="header-title">Completion OTP</span>
+<main class="pwa-container no-bottom-nav">
+    <header class="header">
+        <a href="home.html" class="header-back" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Service Complete</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body" style="text-align: center; padding-top: 30px;">
+        <div style="width:64px; height:64px; margin:0 auto 16px; background:var(--accent-light); border-radius:50%; display:grid; place-items:center; color:var(--primary-teal);">
+            <svg viewBox="0 0 24 24" style="width:36px; height:36px; fill:none; stroke:currentColor; stroke-width:2;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
+        <h2 style="font-size:1.3rem; font-weight:700;">Assistance Completed</h2>
+        <p style="color: var(--text-secondary); margin: 8px 0 16px;">Your roadside assistance job has been successfully resolved.</p>
+
+        <div id="invoicePreview" class="card" style="text-align: left; margin-top: 20px;">
+            <p class="muted">Loading settlement details…</p>
         </div>
 
-        <div class="content-body" style="text-align: center; padding-top: 30px;">
-            <div style="width:64px; height:64px; margin:0 auto 16px; background:var(--accent-light); border-radius:50%; display:grid; place-items:center; color:var(--primary-teal);">
-                <svg viewBox="0 0 24 24" style="width:36px; height:36px; fill:none; stroke:currentColor; stroke-width:2;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-            </div>
-            <h3>Service Completed</h3>
-            <p style="color: var(--text-secondary); margin: 8px 0 16px;">Provide this code to your technician to verify completion.</p>
-
-            <div
-                style="background: var(--accent-light); color: var(--primary-teal); padding: 18px; border-radius: 12px; font-size: 1.8rem; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">
-                582 - 941
-            </div>
-
-            <div class="card" style="text-align: left; margin-top: 20px;">
-                <p><strong>Total Amount:</strong> $70.00</p>
-                <p><strong>Invoice ID:</strong> #RS-4921</p>
-            </div>
-
-            <button class="btn btn-primary" onclick="window.location.href='home.html'">Done & Authorize Payment</button>
+        <div style="margin-top: 20px; display:flex; flex-direction:column; gap:10px;">
+            <a id="payBtn" href="history.html" class="btn btn-primary">Proceed to Payment</a>
+            <a href="home.html" class="btn btn-outline">Return to Home</a>
         </div>
-    </div>
+    </section>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+    const activeTicketId = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
+    const invoicePreview = document.getElementById('invoicePreview');
+    const payBtn = document.getElementById('payBtn');
+
+    if (activeTicketId) {
+        payBtn.href = `payment.html?ticket_id=${encodeURIComponent(activeTicketId)}`;
+        API.get(`/tickets/${activeTicketId}`).then(t => {
+            invoicePreview.innerHTML = `
+                <p><strong>Ticket ID:</strong> <code>#${UI.escape(t.id.slice(0, 8))}</code></p>
+                <p><strong>Service:</strong> ${UI.escape(t.service_type || 'Roadside Assistance')}</p>
+                <p><strong>Status:</strong> ${UI.statusBadge(t.status)}</p>
+            `;
+        }).catch(() => {
+            invoicePreview.innerHTML = '<p class="muted">Ticket completed.</p>';
+        });
+    } else {
+        invoicePreview.innerHTML = '<p class="muted">No active assistance ticket in progress.</p>';
+    }
+</script>
 </body>
 
 </html>

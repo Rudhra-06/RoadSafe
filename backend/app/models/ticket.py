@@ -1,33 +1,10 @@
-import enum
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
-from app.models.responder import ResponderType
-
-
-class TicketStatus(str, enum.Enum):
-    REQUESTED = "REQUESTED"
-    DISPATCHING = "DISPATCHING"
-    ASSIGNED = "ASSIGNED"
-    ACCEPTED = "ACCEPTED"
-    EN_ROUTE = "EN_ROUTE"
-    ARRIVED = "ARRIVED"
-    IN_SERVICE = "IN_SERVICE"
-    COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
-    NO_RESPONDER = "NO_RESPONDER"
-    REASSIGN = "REASSIGN"
-    FAILED = "FAILED"
-
-
-class TicketPriority(str, enum.Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    EMERGENCY = "EMERGENCY"
+from app.utils.enums import ResponderType, TicketStatus, TicketPriority
 
 
 class Ticket(Base):

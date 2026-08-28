@@ -1,19 +1,7 @@
-import enum
 from sqlalchemy import Column, String, Text, Numeric, Integer, DateTime, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.base import BaseModel
-
-
-class InvoiceStatus(str, enum.Enum):
-    PENDING = "PENDING"
-    PAID = "PAID"
-    VOID = "VOID"
-
-
-class PaymentStatus(str, enum.Enum):
-    CREATED = "CREATED"
-    VERIFIED = "VERIFIED"
-    FAILED = "FAILED"
+from app.utils.enums import InvoiceStatus, PaymentStatus
 
 
 class Invoice(BaseModel):

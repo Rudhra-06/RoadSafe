@@ -21,7 +21,6 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str | None = None
     RAZORPAY_CURRENCY: str = "INR"
     INVOICE_TAX_RATE: float = 0.0
-    FIREBASE_PROJECT_ID: str | None = None
 
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

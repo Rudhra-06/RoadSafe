@@ -30,3 +30,16 @@ async def responder_websocket_endpoint(websocket: WebSocket, responder_id: str):
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         ws_manager.disconnect_responder(websocket, responder_id)
+
+
+@router.websocket("/admin/operations")
+async def admin_websocket_endpoint(websocket: WebSocket):
+    """
+    Subscribes admin command console to real-time dispatch, ticket status, and fleet updates.
+    """
+    await ws_manager.connect_admin(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        ws_manager.disconnect_admin(websocket)

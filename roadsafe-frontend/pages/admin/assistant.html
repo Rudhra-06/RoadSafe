@@ -105,7 +105,12 @@
 
         function askAdmin(q) {
             queryInput.value = q;
-            formEl.requestSubmit();
+            queryInput.focus();
+            if (typeof formEl.requestSubmit === 'function') {
+                formEl.requestSubmit();
+            } else {
+                formEl.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
         }
 
         formEl.onsubmit = async (e) => {
@@ -129,6 +134,7 @@
             aCard.className = 'card';
             aCard.innerHTML = `<div class="state"><div class="spinner"></div><p style="font-size:0.85rem; margin-top:4px;">Retrieving from ChromaDB &amp; generating grounded response…</p></div>`;
             chatEl.appendChild(aCard);
+            chatEl.scrollTop = chatEl.scrollHeight;
 
             try {
                 const resp = await API.post('/ai/ask', { question: text });
@@ -152,6 +158,8 @@
                 aCard.innerHTML = `<p style="color:var(--danger-red); font-size:0.88rem;">Assistant error: ${UI.escape(err.message || 'Error')}</p>`;
             } finally {
                 sendBtn.disabled = false;
+                chatEl.scrollTop = chatEl.scrollHeight;
+                queryInput.focus();
             }
         };
     </script>

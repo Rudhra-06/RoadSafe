@@ -40,6 +40,10 @@
                     <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
                     Broadcasts
                 </a>
+                <a href="assistant.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    AI Knowledge
+                </a>
                 <a href="#" onclick="Auth.logout(); return false;" class="sidebar-link" style="color: #f87171; margin-top: auto;">
                     <svg viewBox="0 0 24 24" style="stroke: #f87171;"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
                     Sign Out
@@ -51,7 +55,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
                 <div>
                     <h1 style="font-size: 1.4rem; font-weight: 700;">User &amp; Worker Governance</h1>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage suspensions, abusive accounts, and reactivation.</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage user accounts, contact details, and role permissions.</p>
                 </div>
             </div>
 
@@ -59,12 +63,11 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                     <thead>
                         <tr style="text-align: left; border-bottom: 1px solid var(--border-light);">
-                            <th style="padding: 8px;">User / Mechanic Details</th>
-                            <th>Complaints Lodged</th>
-                            <th>Location</th>
-                            <th>Reviews</th>
-                            <th>Account Status</th>
-                            <th>Actions</th>
+                            <th style="padding: 10px;">User Details</th>
+                            <th>Phone Number</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>User ID</th>
                         </tr>
                     </thead>
                     <tbody id="userTableBody">

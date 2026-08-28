@@ -11,13 +11,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.core.config import settings
-from app.models.billing import Invoice, InvoiceLine, InvoiceStatus, Payment, PaymentStatus
+from app.models.billing import Invoice, InvoiceLine, Payment
 from app.models.parts_catalog import Part
 from app.models.service_catalog import Service
 from app.models.ticket import Ticket
 from app.models.ticket_assignment import TicketAssignment
 from app.models.responder import Responder
-from app.utils.enums import AssignmentStatus, TicketStatus
+from app.utils.enums import AssignmentStatus, TicketStatus, InvoiceStatus, PaymentStatus
 
 
 class BillingService:
@@ -61,7 +61,12 @@ class BillingService:
 
     @staticmethod
     async def get_invoice(db, invoice_id):
-        invoice = (await db.execute(select(Invoice).options(selectinload(Invoice.lines), selectinload(Invoice.payments)).where(Invoice.id == invoice_id))).scalars().first()
+        from sqlalchemy import or_
+        invoice = (await db.execute(
+            select(Invoice)
+            .options(selectinload(Invoice.lines), selectinload(Invoice.payments))
+            .where(or_(Invoice.id == invoice_id, Invoice.ticket_id == invoice_id))
+        )).scalars().first()
         if not invoice: raise HTTPException(404, "Invoice not found")
         return invoice
 

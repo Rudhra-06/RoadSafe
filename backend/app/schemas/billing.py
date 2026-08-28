@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from app.models.billing import InvoiceStatus, PaymentStatus
+from app.utils.enums import InvoiceStatus, PaymentStatus
 
 
 class PartUsageCreate(BaseModel):
