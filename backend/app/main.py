@@ -12,6 +12,13 @@ from app.routers import auth, users, responders, tickets, websocket, offline, se
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Auto-seed admin account on startup (idempotent)
+    try:
+        from seed_admin import seed_admin
+        await seed_admin()
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Admin seed skipped: {e}")
     yield
 
 

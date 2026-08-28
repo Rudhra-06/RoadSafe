@@ -1,42 +1,45 @@
+"""
+Auto-seeds the admin account on startup.
+Run directly:  python seed_admin.py
+Or called from lifespan in main.py.
+"""
 import asyncio
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.db.database import get_db, SessionLocal
+from sqlalchemy.future import select
+from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.utils.enums import UserRole
 from app.core.security import get_password_hash
 
-async def seed_admin():
-    email = input("Admin Email: ")
-    password = input("Admin Password: ")
-    full_name = input("Admin Full Name: ")
+ADMIN_EMAIL = "admin@gmail.com"
+ADMIN_PASSWORD = "admin"
+ADMIN_FULL_NAME = "RoadSafe Admin"
+ADMIN_PHONE = "0000000000"
 
-    async with SessionLocal() as db:
-        from sqlalchemy.future import select
-        result = await db.execute(select(User).filter(User.email == email))
-        existing_user = result.scalars().first()
-        
-        if existing_user:
-            print(f"User with email {email} already exists!")
+
+async def seed_admin():
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).filter(User.email == ADMIN_EMAIL))
+        existing = result.scalars().first()
+        if existing:
+            print(f"[seed] Admin '{ADMIN_EMAIL}' already exists — skipping.")
             return
-            
-        hashed_pwd = get_password_hash(password)
-        admin_user = User(
-            email=email,
-            hashed_password=hashed_pwd,
-            full_name=full_name,
-            phone_number="0000000000",
+        admin = User(
+            email=ADMIN_EMAIL,
+            hashed_password=get_password_hash(ADMIN_PASSWORD),
+            full_name=ADMIN_FULL_NAME,
+            phone_number=ADMIN_PHONE,
             role=UserRole.ADMIN,
-            is_active=True
+            is_active=True,
         )
-        
-        db.add(admin_user)
+        db.add(admin)
         await db.commit()
-        print(f"Admin user {email} created successfully!")
+        print(f"[seed] Admin '{ADMIN_EMAIL}' created successfully.")
+
 
 if __name__ == "__main__":
-    print("--- RoadSafe ERP Admin Seeder ---")
     asyncio.run(seed_admin())

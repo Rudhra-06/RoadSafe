@@ -15,7 +15,7 @@
         Auth.guardRoute();
         
         const currentUser = Auth.getUser();
-        if (currentUser && window.location.pathname.endsWith("/index.html") || window.location.pathname === "/") {
+        if (currentUser && (window.location.pathname.endsWith("/index.html") || window.location.pathname === "/")) {
             Auth.redirectUser(currentUser.role);
         }
     }

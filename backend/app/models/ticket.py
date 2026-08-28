@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, String, Float, Enum, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
-from app.db.database import Base
+from app.db.base import Base
 from app.models.responder import ResponderType
 
 
@@ -42,7 +42,7 @@ class Ticket(Base):
     longitude = Column(Float, nullable=False)
     priority = Column(Enum(TicketPriority), nullable=False, default=TicketPriority.MEDIUM)
     status = Column(Enum(TicketStatus), nullable=False, default=TicketStatus.REQUESTED)
-    contact_phone = Column(String(50), nullable=False)
+    contact_phone = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
