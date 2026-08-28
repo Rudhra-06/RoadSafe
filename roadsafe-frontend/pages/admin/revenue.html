@@ -50,62 +50,86 @@
         <div style="flex: 1; padding: 30px; overflow-y: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 1.4rem; font-weight: 700;">Financial Performance &amp; Payouts</h1>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Platform commission tracking, worker settlements, and transaction history.</p>
+                    <h1 style="font-size: 1.4rem; font-weight: 700;">Financial Performance &amp; Invoices</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Real-time invoice settlements, parts billing, and payment records.</p>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
                 <div class="card">
-                    <small>Gross Transaction Value</small>
-                    <h2 style="color: var(--primary-teal);">$128,450.00</h2>
+                    <small>Gross Invoiced Volume</small>
+                    <h2 style="color: var(--primary-teal);" id="grossVolume">₹0.00</h2>
                 </div>
                 <div class="card">
-                    <small>Platform Commission (15%)</small>
-                    <h2>$19,267.50</h2>
+                    <small>Paid Settlements</small>
+                    <h2 style="color: var(--success-green);" id="paidVolume">₹0.00</h2>
                 </div>
                 <div class="card">
-                    <small>Pending Worker Payouts</small>
-                    <h2 style="color: var(--warning-amber);">$4,320.00</h2>
+                    <small>Pending Invoices</small>
+                    <h2 style="color: var(--warning-amber);" id="pendingVolume">₹0.00</h2>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Recent Platform Settlements</h3>
+                <h3>All Generated Invoices</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem;">
                     <thead>
                         <tr style="text-align: left; border-bottom: 1px solid var(--border-light);">
-                            <th style="padding: 10px;">Transaction ID</th>
-                            <th>Provider / Shop</th>
-                            <th>Total Bill</th>
-                            <th>Platform Cut</th>
-                            <th>Net Payout</th>
+                            <th style="padding: 10px;">Invoice #</th>
+                            <th>Ticket ID</th>
+                            <th>Service Total</th>
+                            <th>Parts Total</th>
+                            <th>Grand Total</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px solid var(--border-light);">
-                            <td style="padding: 10px;">#TXN-99421</td>
-                            <td>Coimbatore Express Garage</td>
-                            <td>$73.50</td>
-                            <td>$11.02</td>
-                            <td>$62.48</td>
-                            <td><span class="badge badge-success">Settled</span></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 10px;">#TXN-99422</td>
-                            <td>Mike T. (Mechanic)</td>
-                            <td>$45.00</td>
-                            <td>$6.75</td>
-                            <td>$38.25</td>
-                            <td><span class="badge badge-danger"
-                                    style="background: #fef3c7; color: var(--warning-amber);">Pending</span></td>
-                        </tr>
+                    <tbody id="invoiceTableBody">
+                        <tr><td colspan="6" style="text-align:center; padding:20px;">Loading invoices…</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-</body>
 
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/ui.js"></script>
+    <script>
+        Auth.guardRoute();
+
+        async function loadRevenue() {
+            try {
+                const invoices = await API.get('/billing/invoices');
+                const gross = invoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+                const paid = invoices.filter(i => i.status === 'PAID').reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+                const pending = invoices.filter(i => i.status === 'PENDING').reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+
+                document.getElementById('grossVolume').textContent = '₹' + gross.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('paidVolume').textContent = '₹' + paid.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('pendingVolume').textContent = '₹' + pending.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+                const tbody = document.getElementById('invoiceTableBody');
+                if (!invoices.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-secondary); padding:20px;">No invoices generated yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = invoices.map(i => `
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 10px;"><code>${UI.escape(i.invoice_number)}</code></td>
+                        <td><code>#${i.ticket_id.slice(0, 8)}…</code></td>
+                        <td>₹${Number(i.service_total).toFixed(2)}</td>
+                        <td>₹${Number(i.parts_total).toFixed(2)}</td>
+                        <td><strong>₹${Number(i.grand_total).toFixed(2)}</strong></td>
+                        <td>${UI.statusBadge(i.status)}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Revenue load error", err);
+            }
+        }
+
+        loadRevenue();
+    </script>
+</body>
 </html>

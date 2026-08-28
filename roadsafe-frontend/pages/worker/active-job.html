@@ -112,7 +112,35 @@
         ACCEPTED:   ['EN_ROUTE',    'Set En Route',    'btn-primary'],
         EN_ROUTE:   ['ARRIVED',     'Mark Arrived',    'btn-primary'],
         ARRIVED:    ['IN_SERVICE',  'Start Service',   'btn-success'],
+        IN_SERVICE: ['COMPLETED',   'Mark Service Resolved', 'btn-success'],
     };
+
+    // Isolated DEV/TESTING GPS Fallback
+    const DEV_FALLBACK_COORDS = { latitude: 11.0168, longitude: 76.9558 };
+    const ENABLE_DEV_FALLBACK = true;
+
+    function startLocationTracking() {
+        if (!navigator.geolocation) {
+            if (ENABLE_DEV_FALLBACK) {
+                API.patch('/responders/location', DEV_FALLBACK_COORDS).catch(() => {});
+            }
+            return;
+        }
+        navigator.geolocation.watchPosition(async position => {
+            try {
+                await API.patch('/responders/location', {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+            } catch (err) {
+                console.error('Location update failed:', err);
+            }
+        }, () => {
+            if (ENABLE_DEV_FALLBACK) {
+                API.patch('/responders/location', DEV_FALLBACK_COORDS).catch(() => {});
+            }
+        }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
+    }
 
     if (!id) { location.href = 'dashboard.html'; }
 
@@ -131,7 +159,7 @@
                     </div>
                 </div>
                 <div class="info-row">
-                    <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                     <div>
                         <div class="info-label">Vehicle</div>
                         <span>${UI.escape(t.vehicle_type || 'Not specified')}</span>
@@ -163,7 +191,7 @@
                     </button>`;
             } else if (['COMPLETED','CANCELLED','FAILED'].includes(t.status)) {
                 statusSec.style.display = 'block';
-                document.getElementById('statusActions').innerHTML = `<p class="muted">This job is ${t.status.toLowerCase()}. No further actions available.</p>`;
+                document.getElementById('statusActions').innerHTML = `<p class="muted">This job is ${t.status.toLowerCase()}. Assistance lifecycle complete.</p>`;
             } else {
                 statusSec.style.display = 'none';
             }
@@ -221,6 +249,7 @@
         }
     });
 
+    startLocationTracking();
     load();
 </script>
 </body>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="RoadSafe Technician AI Assistant — technical and safety guidance.">
+    <title>Technician Assistant — RoadSafe</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<main class="pwa-container">
+    <header class="header">
+        <a href="dashboard.html" class="header-back" aria-label="Back">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <span class="header-title">Technician Safety &amp; Knowledge</span>
+        <span style="width:48px;"></span>
+    </header>
+
+    <section class="content-body" style="display:flex; flex-direction:column; min-height: calc(100vh - 130px);">
+        <div class="page-heading">
+            <h1>Field Technical Assistant</h1>
+            <p>Rapid reference for breakdown protocols, safety precautions, and service standards.</p>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <p style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">Technician Topics:</p>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button class="chip" onclick="askTech('What are the highway breakdown safety precautions?')">Highway Safety &amp; Flares</button>
+                <button class="chip" onclick="askTech('What is the procedure for battery jump start?')">Battery Jump Protocols</button>
+                <button class="chip" onclick="askTech('What are the towing safety procedures?')">Towing &amp; Flatbed Securing</button>
+                <button class="chip" onclick="askTech('What are RoadSafe standard service rates?')">Service Rates &amp; Catalog</button>
+            </div>
+        </div>
+
+        <div id="techChat" style="flex:1; margin-bottom:16px; display:flex; flex-direction:column; gap:12px;">
+            <div class="card" style="border-left: 4px solid var(--primary-teal); background: #f8fafc;">
+                <h3 style="font-size:0.95rem; font-weight:600; margin-bottom:4px;">Technician Knowledge Base</h3>
+                <p style="font-size:0.88rem; color:var(--text-secondary);">
+                    Access verified roadside repair guidelines, vehicle towing protocols, and standard safety precautions while on duty.
+                </p>
+            </div>
+        </div>
+
+        <form id="techForm" style="display:flex; gap:8px; margin-top:auto; position:sticky; bottom:70px; background:var(--bg-card); padding:8px 0;">
+            <input type="text" id="techInput" class="input-field" placeholder="Ask technical safety or service questions…" required style="flex:1;" />
+            <button type="submit" id="techSendBtn" class="btn btn-primary" style="min-width:48px; padding:0 16px;">
+                <svg viewBox="0 0 24 24" style="stroke:#fff;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </form>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Worker navigation">
+        <a href="dashboard.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Jobs
+        </a>
+        <a href="job-history.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+            History
+        </a>
+        <a href="assistant.html" class="nav-item active" aria-current="page">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            AI Help
+        </a>
+        <a href="notifications.html" class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg>
+            Alerts
+        </a>
+        <a href="#" class="nav-item" onclick="Auth.logout(); return false;" style="color:var(--danger-red);">
+            <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3m8-9h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Logout
+        </a>
+    </nav>
+</main>
+
+<script src="../../js/config.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/offline.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    const historyEl = document.getElementById('techChat');
+    const form = document.getElementById('techForm');
+    const input = document.getElementById('techInput');
+    const sendBtn = document.getElementById('techSendBtn');
+
+    function askTech(q) {
+        input.value = q;
+        form.requestSubmit();
+    }
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const query = input.value.trim();
+        if (!query) return;
+
+        const userMsg = document.createElement('div');
+        userMsg.className = 'card';
+        userMsg.style.background = '#e6fffa';
+        userMsg.style.borderColor = 'var(--primary-teal)';
+        userMsg.style.alignSelf = 'flex-end';
+        userMsg.style.maxWidth = '90%';
+        userMsg.innerHTML = `<strong style="font-size:0.85rem; color:var(--primary-teal);">Field Query</strong><p style="font-size:0.9rem; margin-top:2px;">${UI.escape(query)}</p>`;
+        historyEl.appendChild(userMsg);
+
+        input.value = '';
+        sendBtn.disabled = true;
+
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'card';
+        aiMsg.style.maxWidth = '95%';
+        aiMsg.innerHTML = `<div class="state"><div class="spinner"></div><p style="font-size:0.85rem; margin-top:4px;">Retrieving field guidelines…</p></div>`;
+        historyEl.appendChild(aiMsg);
+        aiMsg.scrollIntoView({ behavior: 'smooth' });
+
+        try {
+            const resp = await API.post('/ai/ask', { question: query });
+            const formattedAnswer = UI.escape(resp.answer)
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            const sourcesHtml = (resp.sources || []).map(s => `<span class="chip" style="font-size:0.75rem;">Doc: ${UI.escape(s.title)}</span>`).join(' ');
+
+            aiMsg.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong style="font-size:0.85rem; color:var(--primary-teal);">Verified Technical Knowledge</strong>
+                    <span class="badge ${resp.grounded ? 'badge-success' : 'badge-neutral'}">${resp.grounded ? 'Verified' : 'General'}</span>
+                </div>
+                <div style="font-size:0.88rem; line-height:1.45;">${formattedAnswer}</div>
+                ${sourcesHtml ? `<div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:4px;">${sourcesHtml}</div>` : ''}
+            `;
+        } catch (err) {
+            aiMsg.innerHTML = `<p style="color:var(--danger-red); font-size:0.85rem;">Failed to get guidance: ${UI.escape(err.message || 'Error')}</p>`;
+        } finally {
+            sendBtn.disabled = false;
+            aiMsg.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+</script>
+</body>
+</html>

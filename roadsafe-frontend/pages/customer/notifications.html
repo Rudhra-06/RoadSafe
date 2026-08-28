@@ -22,29 +22,9 @@
             <h1>Notifications</h1>
             <p>Service updates and dispatch alerts.</p>
         </div>
-
-        <div class="card" style="border-left:4px solid var(--primary-teal);">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-                <h3 style="font-size:.95rem;font-weight:600;">Dispatch Update</h3>
-                <small style="color:var(--text-secondary);white-space:nowrap;margin-left:8px;">10 min ago</small>
-            </div>
-            <p style="font-size:.85rem;color:var(--text-secondary);">Your mechanic is 2.4 km away and actively navigating to your location.</p>
-        </div>
-
-        <div class="card" style="border-left:4px solid var(--success-green);">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-                <h3 style="font-size:.95rem;font-weight:600;">Request Confirmed</h3>
-                <small style="color:var(--text-secondary);white-space:nowrap;margin-left:8px;">15 min ago</small>
-            </div>
-            <p style="font-size:.85rem;color:var(--text-secondary);">Ticket #RS-4921 has been assigned to a provider near you.</p>
-        </div>
-
-        <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-                <h3 style="font-size:.95rem;font-weight:600;">Tip</h3>
-                <small style="color:var(--text-secondary);white-space:nowrap;margin-left:8px;">Yesterday</small>
-            </div>
-            <p style="font-size:.85rem;color:var(--text-secondary);">Keep your emergency contact updated in your profile for faster dispatch.</p>
+        <div id="message"></div>
+        <div id="notifList">
+            <div class="state"><div class="spinner"></div><p>Loading alerts…</p></div>
         </div>
     </section>
 
@@ -76,6 +56,34 @@
 <script src="../../js/api.js"></script>
 <script src="../../js/offline.js"></script>
 <script src="../../js/auth.js"></script>
-<script>Auth.guardRoute();</script>
+<script src="../../js/ui.js"></script>
+<script>
+    Auth.guardRoute();
+
+    async function loadNotifications() {
+        const host = document.getElementById('notifList');
+        try {
+            const notifs = await API.get('/notifications');
+            if (!notifs.length) {
+                host.innerHTML = '<div class="empty-state">No notifications yet.</div>';
+                return;
+            }
+            host.innerHTML = notifs.map(n => `
+                <div class="card" style="border-left: 4px solid ${n.type === 'BILLING' ? 'var(--primary-teal)' : n.type === 'STATUS' ? 'var(--success-green)' : 'var(--primary-teal)'};">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                        <h3 style="font-size:.95rem; font-weight:600;">${UI.escape(n.title)}</h3>
+                        <small style="color:var(--text-secondary); white-space:nowrap; margin-left:8px;">${new Date(n.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</small>
+                    </div>
+                    <p style="font-size:.85rem; color:var(--text-secondary);">${UI.escape(n.message)}</p>
+                </div>
+            `).join('');
+        } catch (e) {
+            UI.alert(document.getElementById('message'), 'Could not load alerts.');
+            host.innerHTML = '';
+        }
+    }
+
+    loadNotifications();
+</script>
 </body>
 </html>

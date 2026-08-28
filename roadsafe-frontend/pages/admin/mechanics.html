@@ -62,32 +62,65 @@
                             <th style="padding: 10px;">Mechanic Name</th>
                             <th>Shop Attachment</th>
                             <th>Skills</th>
-                            <th>Verification</th>
-                            <th>Action</th>
+                            <th>Jobs Completed</th>
+                            <th>Active Jobs</th>
+                            <th>Rating &amp; Reviews</th>
+                            <th>Availability</th>
+                            <th>Online</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px solid var(--border-light);">
-                            <td style="padding: 10px;">David R.</td>
-                            <td>Coimbatore Service Hub</td>
-                            <td>Car & Bike Mechanic</td>
-                            <td><span class="badge badge-success">Verified</span></td>
-                            <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;">View
-                                    Credentials</button></td>
-                        </tr>
+                    <tbody id="responderTableBody">
                         <tr>
-                            <td style="padding: 10px;">Sam Miller</td>
-                            <td>Independent Operator</td>
-                            <td>Towing Service</td>
-                            <td><span class="badge badge-danger">Pending Verification</span></td>
-                            <td><button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;">Approve
-                                    Account</button></td>
+                            <td colspan="8" style="text-align:center; color:var(--text-secondary); padding:20px;">Loading responders from backend…</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/offline.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/ui.js"></script>
+    <script>
+        Auth.guardRoute();
+
+        async function loadResponders() {
+            const tbody = document.getElementById('responderTableBody');
+            try {
+                const mechanics = await API.get('/analytics/mechanics');
+                if (!mechanics.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-secondary); padding:20px;">No responders registered yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = mechanics.map(r => {
+                    const ratingDisplay = r.review_count > 0
+                        ? `<span style="color:var(--primary-teal); font-weight:700;">★ ${r.average_rating}</span> <small class="muted">(${r.review_count})</small>`
+                        : '<span class="muted">No ratings yet</span>';
+
+                    return `
+                        <tr style="border-bottom: 1px solid var(--border-light);">
+                            <td style="padding: 10px;"><strong>${UI.escape(r.full_name || 'Responder')}</strong></td>
+                            <td>${UI.escape(r.shop_name || 'Independent Provider')}</td>
+                            <td>${(r.skills || []).map(s => `<span class="chip">${UI.escape(s)}</span>`).join('') || '<span class="muted">General</span>'}</td>
+                            <td><strong style="color:var(--success-green);">${r.completed_jobs}</strong></td>
+                            <td><span class="badge ${r.active_jobs > 0 ? 'badge-warning' : 'badge-neutral'}">${r.active_jobs}</span></td>
+                            <td>${ratingDisplay}</td>
+                            <td><span class="badge ${r.is_available ? 'badge-success' : 'badge-neutral'}">${r.is_available ? 'Available' : 'Unavailable'}</span></td>
+                            <td><span class="badge ${r.is_online ? 'badge-info' : 'badge-neutral'}">${r.is_online ? 'Online' : 'Offline'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger-red); padding:20px;">Failed to load responders: ${UI.escape(err.message || 'Error')}</td></tr>`;
+            }
+        }
+
+        loadResponders();
+    </script>
 </body>
 
 </html>

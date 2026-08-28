@@ -12,6 +12,7 @@ from app.models.idempotency import IdempotencyRecord
 from app.models.service_catalog import Service
 from app.models.parts_catalog import Part
 from app.models.billing import Invoice, InvoiceLine, Payment, Review
+from app.models.notification import Notification
 
 __all__ = [
     "Base",
@@ -25,5 +26,5 @@ __all__ = [
     "IdempotencyRecord",
     "Service",
     "Part",
-    "Invoice", "InvoiceLine", "Payment", "Review",
+    "Invoice", "InvoiceLine", "Payment", "Review", "Notification",
 ]

@@ -67,34 +67,52 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px solid var(--border-light);">
-                            <td style="padding: 8px;">Alex Smith (Worker)</td>
-                            <td>3 Complaints</td>
-                            <td>Coimbatore</td>
-                            <td>2.1 ★</td>
-                            <td><span class="badge badge-danger">Suspended</span></td>
-                            <td>
-                                <button class="btn btn-outline" style="padding: 4px 8px; font-size:0.8rem;"
-                                    onclick="alert('Notification sent to both parties.')">Reactivate Account</button>
-                            </td>
-                        </tr>
+                    <tbody id="userTableBody">
                         <tr>
-                            <td style="padding: 8px;">John Doe (Customer)</td>
-                            <td>0 Complaints</td>
-                            <td>Pollachi</td>
-                            <td>5.0 ★</td>
-                            <td><span class="badge badge-success">Active</span></td>
-                            <td>
-                                <button class="btn btn-danger" style="padding: 4px 8px; font-size:0.8rem;"
-                                    onclick="alert('Account suspended.')">Suspend Account</button>
-                            </td>
+                            <td colspan="5" style="text-align:center; color:var(--text-secondary); padding:20px;">Loading users from backend…</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/offline.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/ui.js"></script>
+    <script>
+        Auth.guardRoute();
+
+        async function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            try {
+                const users = await API.get('/users');
+                if (!users.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-secondary); padding:20px;">No registered users found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = users.map(u => `
+                    <tr style="border-bottom: 1px solid var(--border-light);">
+                        <td style="padding: 10px;">
+                            <strong>${UI.escape(u.full_name || 'User')}</strong>
+                            <br><small class="muted">${UI.escape(u.email)}</small>
+                        </td>
+                        <td>${UI.escape(u.phone_number || 'N/A')}</td>
+                        <td><span class="chip">${UI.escape(u.role)}</span></td>
+                        <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-danger'}">${u.is_active ? 'Active' : 'Suspended'}</span></td>
+                        <td><code>#${u.id.slice(0, 8)}</code></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger-red); padding:20px;">Failed to load users: ${UI.escape(err.message || 'Error')}</td></tr>`;
+            }
+        }
+
+        loadUsers();
+    </script>
 </body>
 
 </html>

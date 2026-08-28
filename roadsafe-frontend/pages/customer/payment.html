@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Invoice Payment — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 <main class="pwa-container no-bottom-nav">
@@ -22,7 +23,7 @@
 
         <button class="btn btn-primary" id="pay" disabled style="margin-top:16px;">
             <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Pay Securely Online
+            Pay Securely Online (Razorpay)
         </button>
     </section>
 </main>
@@ -39,6 +40,7 @@
     const invoiceId = new URLSearchParams(window.location.search).get('invoice_id');
     const host = document.querySelector('#invoice');
     const button = document.querySelector('#pay');
+    const msgEl = document.getElementById('message');
     let invoice;
 
     if (!invoiceId) window.location.href = 'history.html';
@@ -74,31 +76,85 @@
             button.disabled = invoice.status === 'PAID';
             button.innerHTML = invoice.status === 'PAID'
                 ? '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Invoice Paid in Full'
-                : '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online';
+                : '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online (Razorpay)';
 
             if (invoice.status === 'PAID') {
                 button.classList.remove('btn-primary');
                 button.classList.add('btn-success');
             }
         } catch (e) {
-            UI.alert(message, 'Invoice could not be loaded.');
+            UI.alert(msgEl, 'Invoice could not be loaded.');
         }
     }
 
     button.onclick = async () => {
         button.disabled = true;
-        button.textContent = 'Processing transaction…';
+        button.textContent = 'Initializing secure checkout…';
         try {
-            // Direct verification / settlement simulation or razorpay flow
-            await API.post(`/billing/invoices/${invoiceId}/verify-payment`, {
-                payment_id: "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                signature: "mock_signature_approved"
+            const orderData = await API.post(`/billing/invoices/${invoiceId}/payment-order`, {});
+            
+            if (typeof Razorpay === 'undefined') {
+                UI.alert(msgEl, 'Razorpay SDK could not be loaded. Please check your internet connection.');
+                button.disabled = false;
+                button.innerHTML = '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online (Razorpay)';
+                return;
+            }
+
+            const options = {
+                key: orderData.key_id,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "RoadSafe GPS",
+                description: "Roadside Assistance Settlement — " + (invoice.invoice_number || ''),
+                order_id: orderData.order_id,
+                handler: async function (response) {
+                    try {
+                        button.disabled = true;
+                        button.textContent = 'Verifying payment with backend…';
+                        await API.post(`/billing/invoices/${invoiceId}/verify-payment`, {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        await load();
+                        UI.alert(msgEl, 'Payment verified successfully! Redirecting to review…', 'success');
+                        setTimeout(() => {
+                            if (invoice && invoice.ticket_id) {
+                                location.href = 'review.html?ticket_id=' + invoice.ticket_id;
+                            }
+                        }, 1200);
+                    } catch (err) {
+                        UI.alert(msgEl, err.message || 'Payment signature verification failed.');
+                        await load();
+                    }
+                },
+                modal: {
+                    ondismiss: function() {
+                        button.disabled = false;
+                        button.innerHTML = '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online (Razorpay)';
+                    }
+                },
+                prefill: {
+                    name: Auth.getUser()?.full_name || 'Driver',
+                    email: Auth.getUser()?.email || 'driver@roadsafe.com',
+                    contact: Auth.getUser()?.phone_number || ''
+                },
+                theme: {
+                    color: "#008080"
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (resp) {
+                button.disabled = false;
+                button.innerHTML = '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online (Razorpay)';
+                UI.alert(msgEl, 'Payment Failed: ' + (resp.error?.description || 'Transaction declined or cancelled.'));
             });
-            window.location.href = 'review.html?ticket_id=' + invoice.ticket_id;
+            rzp.open();
         } catch (e) {
             button.disabled = false;
-            button.innerHTML = '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online';
-            UI.alert(message, e.message || 'Payment simulation failed.');
+            button.innerHTML = '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay Securely Online (Razorpay)';
+            UI.alert(msgEl, e.message || 'Could not initiate payment order.');
         }
     };
 

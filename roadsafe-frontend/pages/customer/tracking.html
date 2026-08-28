@@ -33,6 +33,12 @@
             <p id="detail" style="margin-top:8px; font-size:0.88rem;"></p>
         </section>
 
+        <section class="card" id="responderCard" style="display:none;">
+            <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:8px;">Assigned Responder</h3>
+            <div id="responderDetails"></div>
+            <p id="mechanicLocation" class="muted" style="font-size:0.8rem; margin-top:6px;"></p>
+        </section>
+
         <section class="card">
             <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:12px;">Dispatch Progression</h3>
             <div class="timeline" id="timeline"></div>
@@ -58,6 +64,25 @@
 
     if (!id) location.href = 'history.html';
 
+    async function loadResponderInfo(responderId) {
+        if (!responderId) return;
+        try {
+            const resp = await API.get('/responders/' + responderId);
+            const card = document.getElementById('responderCard');
+            const details = document.getElementById('responderDetails');
+            card.style.display = 'block';
+            details.innerHTML = `
+                <p style="font-weight:600; font-size:0.95rem;">${UI.escape(resp.shop_name || resp.full_name || 'Assigned Technician')}</p>
+                <p class="muted" style="font-size:0.82rem;">${UI.escape((resp.type || '').replaceAll('_', ' '))}${resp.phone_number ? ` · Tel: ${UI.escape(resp.phone_number)}` : ''}</p>
+            `;
+            if (resp.latitude && resp.longitude) {
+                document.getElementById('mechanicLocation').textContent = `Mechanic Location: ${resp.latitude.toFixed(4)}, ${resp.longitude.toFixed(4)}`;
+            }
+        } catch (e) {
+            console.log('Responder details fetch:', e);
+        }
+    }
+
     function render(t) {
         ticket = t;
         document.getElementById('statusBadge').innerHTML = UI.statusBadge(t.status);
@@ -74,17 +99,32 @@
             </div>
         `).join('');
 
+        const statusDescriptions = {
+            REQUESTED: 'Request received. Searching for nearby responders…',
+            DISPATCHING: 'Dispatching to nearest available mechanics…',
+            ASSIGNED: 'Responder assigned. Awaiting confirmation.',
+            ACCEPTED: 'Responder accepted your request and is preparing.',
+            EN_ROUTE: 'Responder is on the way to your location.',
+            ARRIVED: 'Responder has arrived at your location.',
+            IN_SERVICE: 'Service and repairs currently in progress.',
+            COMPLETED: 'Service completed successfully.'
+        };
+
         document.getElementById('detail').textContent = failed
             ? 'Dispatch could not be completed automatically. Please check your request.'
-            : 'Your responder is updating progress in real-time.';
+            : (statusDescriptions[t.status] || 'Your responder is updating progress in real-time.');
+
+        const activeAssignment = (t.assignments || []).find(a => a.status === 'ACCEPTED' || a.status === 'OFFERED');
+        if (activeAssignment && activeAssignment.responder_id) {
+            loadResponderInfo(activeAssignment.responder_id);
+        }
 
         const actionArea = document.getElementById('actionArea');
         if (t.status === 'COMPLETED') {
             actionArea.innerHTML = `
-                <a href="payment.html?invoice_id=${encodeURIComponent(t.id)}" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Proceed to Invoice &amp; Payment
-                </a>
+                <div class="card" style="background:var(--success-green-light,#e8f5e9); border-color:var(--success-green,#2e7d32); margin-bottom:12px; padding:12px; text-align:center;">
+                    <p style="font-weight:600; color:var(--success-green,#2e7d32);">Roadside Assistance Resolved</p>
+                </div>
             `;
         }
     }
@@ -93,8 +133,15 @@
     
     if (typeof WSManager !== 'undefined') {
         WSManager.connect('tickets/' + id, e => {
-            if (e.event === 'STATUS_UPDATE' && ticket) {
-                render({ ...ticket, status: e.new_status });
+            if (e.event === 'STATUS_UPDATE') {
+                API.get('/tickets/' + id).then(render).catch(() => {
+                    if (ticket) render({ ...ticket, status: e.new_status });
+                });
+            } else if (e.event === 'LOCATION_UPDATE') {
+                const locEl = document.getElementById('mechanicLocation');
+                if (locEl) {
+                    locEl.textContent = `Mechanic Live GPS: ${Number(e.latitude).toFixed(4)}, ${Number(e.longitude).toFixed(4)}`;
+                }
             }
         });
     }

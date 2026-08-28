@@ -7,18 +7,30 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routers import auth, users, responders, tickets, websocket, offline, services, parts, billing, reviews
+from app.db.database import engine
+from app.db.base import Base
+from app.routers import auth, users, responders, tickets, websocket, offline, services, parts, billing, reviews, notifications, ai, analytics
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Auto-seed admin account on startup (idempotent)
+    # Ensure all tables (including notifications) exist
     try:
-        from seed_admin import seed_admin
-        await seed_admin()
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         import logging
-        logging.getLogger("uvicorn.error").warning(f"Admin seed skipped: {e}")
+        logging.getLogger("uvicorn.error").warning(f"Table creation skipped: {e}")
+
+    # Auto-seed admin account, services catalog & parts catalog on startup (idempotent)
+    try:
+        from seed_admin import seed_admin, seed_services, seed_parts
+        await seed_admin()
+        await seed_services()
+        await seed_parts()
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Admin/Services/Parts seed skipped: {e}")
     yield
 
 
@@ -110,6 +122,9 @@ app.include_router(services.router, prefix=settings.API_V1_STR)
 app.include_router(parts.router, prefix=settings.API_V1_STR)
 app.include_router(billing.router, prefix=settings.API_V1_STR)
 app.include_router(reviews.router, prefix=settings.API_V1_STR)
+app.include_router(notifications.router, prefix=settings.API_V1_STR)
+app.include_router(ai.router, prefix=settings.API_V1_STR)
+app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(websocket.router)
 
 

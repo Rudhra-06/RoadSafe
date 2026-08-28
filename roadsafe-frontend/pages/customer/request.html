@@ -84,32 +84,62 @@
     <script>
         Auth.guardRoute();
 
+        // DEV/TESTING FALLBACK: Used ONLY when browser geolocation fails
+        const DEV_FALLBACK_COORDS = { latitude: 11.0168, longitude: 76.9558 };
+        const ENABLE_DEV_FALLBACK = true;
+
         const id = new URLSearchParams(window.location.search).get('service_id');
         const sel = document.querySelector('#service');
         const msg = document.querySelector('#message');
         const formEl = document.querySelector('#form');
         const locationInput = document.querySelector('#location');
-        let coords, services = [];
+        const locationHelp = document.querySelector('#locationHelp');
+        let coords = null;
+        let isSimulated = false;
+        let services = [];
 
         const type = s => /tow/i.test(s.category || s.name) ? 'TOWING_OPERATOR' : /bike/i.test(s.category || s.name) ? 'BIKE_MECHANIC' : /engine|tyre|tire|mechanic/i.test(s.category || s.name) ? 'CAR_MECHANIC' : 'ROADSIDE_TECHNICIAN';
+
+        function applyLocation(loc, simulated) {
+            coords = loc;
+            isSimulated = simulated;
+            if (coords) {
+                locationInput.value = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+                locationHelp.textContent = isSimulated
+                    ? 'Using simulated location (Coimbatore fallback for dev/testing).'
+                    : 'Device GPS location verified.';
+                document.querySelector('#continue').disabled = false;
+            } else {
+                locationInput.value = '';
+                locationHelp.textContent = 'Unable to determine location. Please enable GPS permissions.';
+                document.querySelector('#continue').disabled = true;
+            }
+        }
 
         Promise.all([
             API.get('/services'),
             new Promise(done => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
-                        p => { coords = { latitude: p.coords.latitude, longitude: p.coords.longitude }; done(); },
+                        p => {
+                            applyLocation({ latitude: p.coords.latitude, longitude: p.coords.longitude }, false);
+                            done();
+                        },
                         () => {
-                            // DEV/TESTING FALLBACK: Coimbatore coordinates for simulation
-                            coords = { latitude: 11.0168, longitude: 76.9558 };
-                            document.querySelector('#locationHelp').textContent = 'Using simulated location (Coimbatore fallback).';
+                            if (ENABLE_DEV_FALLBACK) {
+                                applyLocation(DEV_FALLBACK_COORDS, true);
+                            } else {
+                                applyLocation(null, false);
+                            }
                             done();
                         }
                     );
                 } else {
-                    // DEV/TESTING FALLBACK: Coimbatore coordinates for simulation
-                    coords = { latitude: 11.0168, longitude: 76.9558 };
-                    document.querySelector('#locationHelp').textContent = 'Using simulated location (Coimbatore fallback).';
+                    if (ENABLE_DEV_FALLBACK) {
+                        applyLocation(DEV_FALLBACK_COORDS, true);
+                    } else {
+                        applyLocation(null, false);
+                    }
                     done();
                 }
             })
@@ -117,14 +147,6 @@
             services = items;
             sel.innerHTML = items.map(s => `<option value="${s.id}">${UI.escape(s.name)} — ${Number(s.base_price).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</option>`).join('');
             if (id) sel.value = id;
-
-            if (coords) {
-                locationInput.value = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
-                document.querySelector('#locationHelp').textContent = 'Device GPS location verified.';
-                document.querySelector('#continue').disabled = false;
-            } else {
-                document.querySelector('#continue').disabled = true;
-            }
         }).catch(() => UI.alert(msg, 'Services could not be loaded. Please retry.'));
 
         formEl.onsubmit = e => {

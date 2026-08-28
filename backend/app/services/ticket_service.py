@@ -88,6 +88,14 @@ class TicketService:
                 db, ticket, TicketStatus.ASSIGNED, customer_id, f"Assigned to responder {best_responder.id}"
             )
 
+            from app.services.notification_service import NotificationService
+            await NotificationService.create_notification(
+                db, user_id=customer_id, title="Request Dispatched", message=f"Assistance ticket #{ticket.id[:8]} dispatched to a nearby provider.", type="DISPATCH", ticket_id=ticket.id
+            )
+            await NotificationService.create_notification(
+                db, user_id=best_responder.user_id, title="New Job Offer", message=f"New emergency ticket #{ticket.id[:8]} ({ticket.service_type.value}) assigned to you.", type="DISPATCH", ticket_id=ticket.id
+            )
+
             # Notify targeted responder
             await ws_manager.send_to_responder(
                 responder_id=best_responder.id,
@@ -102,6 +110,10 @@ class TicketService:
                 }
             )
         else:
+            from app.services.notification_service import NotificationService
+            await NotificationService.create_notification(
+                db, user_id=customer_id, title="Searching for Providers", message=f"Ticket #{ticket.id[:8]} is searching for available responders.", type="DISPATCH", ticket_id=ticket.id
+            )
             await TicketService._transition_status(
                 db, ticket, TicketStatus.NO_RESPONDER, customer_id, "No available responders found nearby"
             )
@@ -207,6 +219,11 @@ class TicketService:
             responder_user_id,
             "Responder accepted assignment" if accepted else "Responder rejected assignment",
         )
+        if accepted and ticket.customer_id:
+            from app.services.notification_service import NotificationService
+            await NotificationService.create_notification(
+                db, user_id=ticket.customer_id, title="Mechanic Accepted", message="A technician has accepted your request and is preparing.", type="STATUS", ticket_id=ticket.id
+            )
         return assignment
 
     @staticmethod
@@ -259,3 +276,17 @@ class TicketService:
                 "updated_at": ticket.updated_at.isoformat()
             }
         )
+
+        # Create contextual persistent notification for customer
+        status_notifs = {
+            TicketStatus.EN_ROUTE: ("Mechanic En Route", "Your technician is on the way to your location."),
+            TicketStatus.ARRIVED: ("Mechanic Arrived", "Your technician has arrived at the scene."),
+            TicketStatus.IN_SERVICE: ("Service Started", "Diagnostic and repair work is underway."),
+            TicketStatus.COMPLETED: ("Service Resolved", "Your roadside assistance has been completed."),
+        }
+        if new_status in status_notifs and ticket.customer_id:
+            from app.services.notification_service import NotificationService
+            title, msg = status_notifs[new_status]
+            await NotificationService.create_notification(
+                db, user_id=ticket.customer_id, title=title, message=msg, type="STATUS", ticket_id=ticket.id
+            )

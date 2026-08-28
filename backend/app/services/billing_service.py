@@ -51,6 +51,12 @@ class BillingService:
         db.add(invoice)
         ticket.status = TicketStatus.COMPLETED
         await db.commit()
+
+        from app.services.notification_service import NotificationService
+        await NotificationService.create_notification(
+            db, user_id=ticket.customer_id, title="Invoice Ready", message=f"Invoice #{invoice.invoice_number} (₹{invoice.grand_total}) is ready for payment.", type="BILLING", ticket_id=ticket.id
+        )
+
         return await BillingService.get_invoice(db, invoice.id)
 
     @staticmethod
@@ -95,4 +101,12 @@ class BillingService:
         if not hmac.compare_digest(expected, payload.razorpay_signature):
             payment.status = PaymentStatus.FAILED; await db.commit(); raise HTTPException(400, "Payment signature could not be verified")
         payment.provider_payment_id = payload.razorpay_payment_id; payment.status = PaymentStatus.VERIFIED; invoice.status = InvoiceStatus.PAID
-        await db.commit(); return payment
+        await db.commit()
+
+        from app.services.notification_service import NotificationService
+        await NotificationService.create_notification(
+            db, user_id=invoice.customer_id, title="Payment Confirmed", message=f"Invoice #{invoice.invoice_number} (₹{invoice.grand_total}) has been paid successfully.", type="BILLING", ticket_id=invoice.ticket_id
+        )
+
+        return payment
+

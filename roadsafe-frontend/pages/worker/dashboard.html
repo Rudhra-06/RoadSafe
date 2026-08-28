@@ -212,6 +212,7 @@
     <script src="../../js/offline.js"></script>
     <script src="../../js/auth.js"></script>
     <script src="../../js/app.js"></script>
+    <script src="../../js/ws.js"></script>
     <script src="../../js/ui.js"></script>
     <script>
         Auth.guardRoute();
@@ -222,6 +223,7 @@
         const availStatus = document.getElementById('availStatus');
         const availText = document.getElementById('availText');
         const toggleLabel = document.getElementById('toggleLabel');
+        let currentResponderId = null;
 
         function setAvailUI(isOn) {
             availStatus.textContent = isOn ? 'Available for Dispatch' : 'Unavailable';
@@ -230,9 +232,17 @@
             availStatus.style.color = isOn ? 'var(--success-green)' : 'var(--text-secondary)';
         }
 
+        // DEV/TESTING FALLBACK: Used ONLY when browser geolocation fails
+        const DEV_FALLBACK_COORDS = { latitude: 11.0168, longitude: 76.9558 };
+        const ENABLE_DEV_FALLBACK = true;
+
         function startLocationTracking() {
             if (!navigator.geolocation) {
                 UI.alert(msgEl, 'This browser does not support location services.');
+                if (ENABLE_DEV_FALLBACK) {
+                    API.patch('/responders/location', DEV_FALLBACK_COORDS)
+                        .catch(err => console.error('DEV/TESTING: Responder location fallback patch failed:', err));
+                }
                 return;
             }
             navigator.geolocation.watchPosition(async position => {
@@ -247,10 +257,10 @@
             }, () => {
                 UI.alert(msgEl, 'Location permission is required to receive nearby job offers.');
                 // DEV/TESTING FALLBACK: Coimbatore coordinates to match dispatcher testing
-                API.patch('/responders/location', {
-                    latitude: 11.0168,
-                    longitude: 76.9558
-                }).catch(err => console.error('DEV/TESTING: Responder location fallback patch failed:', err));
+                if (ENABLE_DEV_FALLBACK) {
+                    API.patch('/responders/location', DEV_FALLBACK_COORDS)
+                        .catch(err => console.error('DEV/TESTING: Responder location fallback patch failed:', err));
+                }
             }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
         }
 
@@ -265,6 +275,17 @@
                 const isOn = profile.is_available && profile.is_online;
                 toggle.checked = isOn;
                 setAvailUI(isOn);
+
+                if (profile.id && !currentResponderId) {
+                    currentResponderId = profile.id;
+                    if (typeof WSManager !== 'undefined') {
+                        WSManager.connect('responders/' + profile.id, e => {
+                            if (e.event === 'NEW_ASSIGNMENT' || e.event === 'AVAILABILITY_UPDATE') {
+                                load();
+                            }
+                        });
+                    }
+                }
 
                 const tickets = await API.get('/tickets');
                 const cards = tickets.filter(t =>

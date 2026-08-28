@@ -26,6 +26,16 @@ class DispatchService:
         result = await db.execute(stmt)
         candidates = result.all()
         if not candidates:
+            # Fallback: check if any online & available responder of this service type exists
+            fallback_stmt = select(Responder).where(
+                Responder.type == ticket.service_type,
+                Responder.is_available == True,
+                Responder.is_online == True,
+            )
+            fallback_res = await db.execute(fallback_stmt)
+            avail = fallback_res.scalars().all()
+            if avail:
+                return (avail[0], 50.0)
             return None
 
         latest_locations = {}
