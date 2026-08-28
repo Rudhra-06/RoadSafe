@@ -99,10 +99,17 @@
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         p => { coords = { latitude: p.coords.latitude, longitude: p.coords.longitude }; done(); },
-                        () => { document.querySelector('#locationHelp').textContent = 'Location permission is required to request assistance.'; done(); }
+                        () => {
+                            // DEV/TESTING FALLBACK: Coimbatore coordinates for simulation
+                            coords = { latitude: 11.0168, longitude: 76.9558 };
+                            document.querySelector('#locationHelp').textContent = 'Using simulated location (Coimbatore fallback).';
+                            done();
+                        }
                     );
                 } else {
-                    document.querySelector('#locationHelp').textContent = 'This browser does not support location services.';
+                    // DEV/TESTING FALLBACK: Coimbatore coordinates for simulation
+                    coords = { latitude: 11.0168, longitude: 76.9558 };
+                    document.querySelector('#locationHelp').textContent = 'Using simulated location (Coimbatore fallback).';
                     done();
                 }
             })

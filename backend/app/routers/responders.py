@@ -26,35 +26,6 @@ router = APIRouter(prefix="/responders", tags=["Responders"])
 
 responder_only = RoleChecker([UserRole.RESPONDER])
 customer_or_staff = RoleChecker([UserRole.CUSTOMER, UserRole.MANAGER, UserRole.ADMIN])
-<<<<<<< HEAD
-admin_or_manager = RoleChecker([UserRole.ADMIN, UserRole.MANAGER])
-
-
-@router.get("", response_model=List[ResponderRead], dependencies=[Depends(admin_or_manager)])
-async def list_all_responders(
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_db),
-):
-    """List all responders (Admin/Manager only)."""
-    result = await db.execute(
-        select(Responder)
-        .options(selectinload(Responder.skills), selectinload(Responder.locations))
-        .offset(skip).limit(limit)
-    )
-    responders = result.scalars().all()
-    # Attach latest_location for each responder
-    from app.models.responder_location import ResponderLocation
-    out = []
-    for r in responders:
-        rd = ResponderRead.model_validate(r)
-        if r.locations:
-            latest = max(r.locations, key=lambda l: l.created_at)
-            from app.schemas.responder import ResponderLocationRead as RLR
-            rd.latest_location = RLR.model_validate(latest)
-        out.append(rd)
-    return out
-=======
 staff_only = RoleChecker([UserRole.MANAGER, UserRole.ADMIN])
 
 
@@ -74,7 +45,6 @@ async def list_responders(db: AsyncSession = Depends(get_db)):
         )
         for responder in await ResponderService.list_responders(db)
     ]
->>>>>>> divu
 
 
 @router.get("/nearby", response_model=List[ResponderNearbyRead], dependencies=[Depends(customer_or_staff)])

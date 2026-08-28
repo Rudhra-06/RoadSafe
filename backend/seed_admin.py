@@ -9,49 +9,47 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-<<<<<<< HEAD
 from sqlalchemy.future import select
-=======
->>>>>>> divu
 from app.db.database import AsyncSessionLocal
 from app.models.user import User
 from app.utils.enums import UserRole
 from app.core.security import get_password_hash
 
-ADMIN_EMAIL = "admin@gmail.com"
-ADMIN_PASSWORD = "admin"
-ADMIN_FULL_NAME = "RoadSafe Admin"
-ADMIN_PHONE = "0000000000"
-
-<<<<<<< HEAD
+ADMINS_TO_SEED = [
+    {
+        "email": "admin@roadsafe.com",
+        "password": "AdminPass123!",
+        "full_name": "RoadSafe Admin (Test)",
+        "phone_number": "0000000000",
+    },
+    {
+        "email": "admin@gmail.com",
+        "password": "admin",
+        "full_name": "RoadSafe Default Admin",
+        "phone_number": "1111111111",
+    }
+]
 
 async def seed_admin():
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(User).filter(User.email == ADMIN_EMAIL))
-        existing = result.scalars().first()
-        if existing:
-            print(f"[seed] Admin '{ADMIN_EMAIL}' already exists — skipping.")
-=======
-    async with AsyncSessionLocal() as db:
-        from sqlalchemy.future import select
-        result = await db.execute(select(User).filter(User.email == email))
-        existing_user = result.scalars().first()
-        
-        if existing_user:
-            print(f"User with email {email} already exists!")
->>>>>>> divu
-            return
-        admin = User(
-            email=ADMIN_EMAIL,
-            hashed_password=get_password_hash(ADMIN_PASSWORD),
-            full_name=ADMIN_FULL_NAME,
-            phone_number=ADMIN_PHONE,
-            role=UserRole.ADMIN,
-            is_active=True,
-        )
-        db.add(admin)
-        await db.commit()
-        print(f"[seed] Admin '{ADMIN_EMAIL}' created successfully.")
+        for admin_data in ADMINS_TO_SEED:
+            result = await db.execute(select(User).filter(User.email == admin_data["email"]))
+            existing = result.scalars().first()
+            if existing:
+                print(f"[seed] Admin '{admin_data['email']}' already exists — skipping.")
+                continue
+            
+            admin = User(
+                email=admin_data["email"],
+                hashed_password=get_password_hash(admin_data["password"]),
+                full_name=admin_data["full_name"],
+                phone_number=admin_data["phone_number"],
+                role=UserRole.ADMIN,
+                is_active=True,
+            )
+            db.add(admin)
+            await db.commit()
+            print(f"[seed] Admin '{admin_data['email']}' created successfully.")
 
 
 if __name__ == "__main__":
