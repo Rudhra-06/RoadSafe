@@ -81,11 +81,12 @@
                         ${UI.statusBadge(t.status)}
                     </div>
                     <p class="muted" style="font-size:.8rem;">Ticket #${UI.escape(t.id.slice(0,8))}… · ${UI.escape(t.vehicle_type)}</p>
-                    ${t.status === 'COMPLETED' || t.status === 'IN_SERVICE' ?
+                    ${t.status === 'COMPLETED' ?
                         `<a href="payment.html?invoice_id=${encodeURIComponent(t.id)}" class="btn btn-outline btn-inline" style="margin-top:12px;font-size:.85rem;padding:10px 14px;">
                             <svg class="icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                             View Invoice
                         </a>` : ''}
+
                     ${['ASSIGNED','ACCEPTED','EN_ROUTE','ARRIVED','IN_SERVICE'].includes(t.status) ?
                         `<a href="tracking.html" class="btn btn-secondary btn-inline" style="margin-top:12px;font-size:.85rem;padding:10px 14px;" onclick="localStorage.setItem('${CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID}','${t.id}')">
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

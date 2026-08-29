@@ -153,7 +153,7 @@
             <!-- Message area -->
             <div id="message"></div>
 
-            <!-- Jobs Section -->
+            <!-- Jobs Section (Immediately below Availability) -->
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                 <p class="section-title" style="margin:0;">Incoming &amp; Active Jobs</p>
                 <button class="btn btn-outline btn-inline" onclick="load()"
@@ -170,6 +170,17 @@
                 <div class="state">
                     <div class="spinner"></div>
                     <p>Loading jobs…</p>
+                </div>
+            </div>
+
+            <!-- Ratings & Performance Section (At the Bottom) -->
+            <div class="card" id="workerRatingsCard" style="margin-top:20px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="font-size:0.92rem; font-weight:700;">Customer Ratings &amp; Reviews</strong>
+                    <span id="avgRatingBadge" class="badge badge-success" style="font-size:0.8rem;">★ 5.0</span>
+                </div>
+                <div id="ratingsList">
+                    <p class="muted" style="font-size:0.85rem; margin:0;">Loading customer ratings…</p>
                 </div>
             </div>
 
@@ -293,6 +304,32 @@
                             }
                         });
                     }
+                }
+
+                // Load customer ratings for this worker (anonymized)
+                try {
+                    const reviews = await API.get('/reviews').catch(() => []);
+                    const rHost = document.getElementById('ratingsList');
+                    const badge = document.getElementById('avgRatingBadge');
+                    if (reviews && reviews.length) {
+                        const avg = (reviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / reviews.length).toFixed(1);
+                        badge.textContent = `★ ${avg} (${reviews.length} ${reviews.length === 1 ? 'rating' : 'ratings'})`;
+                        rHost.innerHTML = reviews.slice(0, 3).map(r => `
+                            <div style="padding:8px 0; border-bottom:1px solid var(--border-light); font-size:0.86rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                    <strong style="color:var(--primary-teal);">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} (${r.rating}/5)</strong>
+                                    <small class="muted">${new Date(r.created_at).toLocaleDateString()}</small>
+                                </div>
+                                <p style="margin:2px 0 3px; color:var(--text-main); font-size:0.86rem;">${UI.escape(r.comment || 'Verified customer rating')}</p>
+                                <small class="muted" style="font-size:0.75rem;">Ticket #<code>${UI.escape((r.ticket_id || '').slice(0, 8))}</code> · Verified Customer Review</small>
+                            </div>
+                        `).join('');
+                    } else {
+                        badge.textContent = '★ 5.0 (New)';
+                        rHost.innerHTML = '<p class="muted" style="font-size:0.84rem; margin:0;">No customer reviews received yet. Complete jobs to receive ratings.</p>';
+                    }
+                } catch (e) {
+                    console.error('Error loading worker reviews', e);
                 }
 
                 const tickets = await API.get('/tickets');

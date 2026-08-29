@@ -14,7 +14,7 @@ class Invoice(BaseModel):
     fees_total = Column(Numeric(10, 2), nullable=False, default=0)
     tax_total = Column(Numeric(10, 2), nullable=False, default=0)
     grand_total = Column(Numeric(10, 2), nullable=False, default=0)
-    status = Column(Enum(InvoiceStatus), nullable=False, default=InvoiceStatus.PENDING, index=True)
+    status = Column(Enum(InvoiceStatus, native_enum=False), nullable=False, default=InvoiceStatus.PENDING, index=True)
     ticket = relationship("Ticket")
     customer = relationship("User")
     lines = relationship("InvoiceLine", back_populates="invoice", cascade="all, delete-orphan")
@@ -41,7 +41,7 @@ class Payment(BaseModel):
     provider_payment_id = Column(String(100), unique=True, nullable=True)
     amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(8), nullable=False, default="INR")
-    status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.CREATED, index=True)
+    status = Column(Enum(PaymentStatus, native_enum=False), nullable=False, default=PaymentStatus.CREATED, index=True)
     invoice = relationship("Invoice", back_populates="payments")
 
 

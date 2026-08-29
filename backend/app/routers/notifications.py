@@ -16,9 +16,12 @@ async def list_user_notifications(
     claims=Depends(get_current_user_claims),
     db: AsyncSession = Depends(get_db)
 ):
-    """Retrieve in-app notifications for the authenticated user."""
+    """Retrieve in-app notifications for authenticated user, or all system notifications for Admins/Managers."""
+    from app.utils.enums import UserRole
+    is_admin = claims.get("role") in (UserRole.ADMIN.value, UserRole.MANAGER.value)
+    user_id = None if is_admin else claims["user_id"]
     return await NotificationService.list_notifications(
-        db, user_id=claims["user_id"], limit=limit
+        db, user_id=user_id, limit=limit
     )
 
 

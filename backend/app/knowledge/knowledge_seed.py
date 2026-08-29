@@ -113,5 +113,31 @@ KNOWLEDGE_DOCUMENTS = [
             "- Are technicians certified? Yes, all RoadSafe responders undergo identity and qualification verification before receiving job dispatches."
         ),
         "tags": ["faq", "help", "dispatch", "payment", "tracking", "eta", "time", "technician"]
+    },
+    {
+        "id": "doc_auto_care_shops",
+        "title": "Auto Care Shops & Partner Workshop Network",
+        "category": "workshops",
+        "content": (
+            "RoadSafe maintains a 24/7 active verified network of partner Auto Care Shops, certified garages, and mobile mechanic units:\n"
+            "1. Network Status: All partnered Auto Care Shops and mobile responder hubs operate 24/7 on-call for roadside assistance, vehicle diagnostic scans, and emergency mechanical overhauls.\n"
+            "2. Dispatch & Proximity: When a driver requests assistance or towing, RoadSafe's location-aware dispatch engine routes the closest active auto care responder or directs towing to the nearest certified partner garage within the service radius.\n"
+            "3. Certified Standards: Partner shops provide genuine parts with itemized transparent billing, guaranteed turnaround times, and verified warranty coverage.\n"
+            "4. Finding an Active Shop: Drivers and operators can view active provider listings with live availability directly in the RoadSafe app under the Providers directory or by initiating a request."
+        ),
+        "tags": ["auto care", "shop", "shops", "active", "garage", "workshop", "partner", "mechanic", "mechanics", "centers", "service station", "store"]
+    },
+    {
+        "id": "doc_responder_network",
+        "title": "Responder On-Duty & Active Availability Protocols",
+        "category": "operations",
+        "content": (
+            "RoadSafe active responder operations & duty guidelines:\n"
+            "1. On-Duty Availability: Responders (car mechanics, bike mechanics, tow operators, paramedics) toggle their live availability to 'Active' via the worker dashboard to receive automated dispatches.\n"
+            "2. GPS Telemetry: Active responders transmit real-time GPS coordinates via browser/mobile geolocation so the dispatch engine can calculate accurate ETAs and nearest-responder assignment.\n"
+            "3. Auto Care Dispatch: Requests are matched based on required skill (e.g. Car Mechanic, Towing, Electrical) and physical distance to ensure fast emergency response times."
+        ),
+        "tags": ["responder", "active", "online", "duty", "availability", "auto care", "operator", "mechanic", "dispatch"]
     }
 ]
+

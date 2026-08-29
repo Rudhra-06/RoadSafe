@@ -121,8 +121,41 @@ class BillingService:
             .where(or_(Invoice.id == invoice_id, Invoice.ticket_id == invoice_id))
         )).scalars().first()
         if not invoice:
+            # Check if this ID is a Ticket that is completed or in service but hasn't had an invoice row created yet
+            ticket = (await db.execute(
+                select(Ticket)
+                .options(selectinload(Ticket.customer))
+                .where(Ticket.id == invoice_id)
+            )).scalars().first()
+            if ticket and ticket.status in [TicketStatus.COMPLETED, TicketStatus.IN_SERVICE]:
+                service = (await db.execute(select(Service).where(Service.is_active == True))).scalars().first()
+                base_price = Decimal(str(service.base_price)) if service else Decimal("150.00")
+                svc_name = service.name if service else (ticket.service_type.value.replace("_", " ").title() if ticket.service_type else "Roadside Assistance")
+                subtotal = base_price
+                tax = (subtotal * Decimal(str(settings.INVOICE_TAX_RATE)) / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                grand_total = subtotal + tax
+                invoice_num = f"RS-{datetime.utcnow():%Y%m%d}-{ticket.id[:8].upper()}"
+
+                new_inv = Invoice(
+                    invoice_number=invoice_num,
+                    ticket_id=ticket.id,
+                    customer_id=ticket.customer_id,
+                    service_total=base_price,
+                    parts_total=Decimal("0.00"),
+                    fees_total=Decimal("0.00"),
+                    tax_total=tax,
+                    grand_total=grand_total,
+                    status=InvoiceStatus.PENDING
+                )
+                new_inv.lines = [InvoiceLine(description=svc_name, quantity=1, unit_price=base_price, line_total=base_price, line_type="SERVICE")]
+                db.add(new_inv)
+                await db.commit()
+                await db.refresh(new_inv)
+                return await BillingService.get_invoice(db, new_inv.id)
+
             raise HTTPException(404, "Invoice not found")
         return invoice
+
 
     @staticmethod
     async def list_invoices(db: AsyncSession, customer_id: Optional[str] = None):

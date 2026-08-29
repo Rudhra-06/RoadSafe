@@ -48,15 +48,13 @@ class NotificationService:
     @staticmethod
     async def list_notifications(
         db: AsyncSession,
-        user_id: str,
+        user_id: Optional[str] = None,
         limit: int = 50
     ) -> List[Notification]:
-        result = await db.execute(
-            select(Notification)
-            .where(Notification.user_id == user_id)
-            .order_by(Notification.created_at.desc())
-            .limit(limit)
-        )
+        q = select(Notification).order_by(Notification.created_at.desc()).limit(limit)
+        if user_id:
+            q = q.where(Notification.user_id == user_id)
+        result = await db.execute(q)
         return result.scalars().all()
 
     @staticmethod

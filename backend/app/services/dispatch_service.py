@@ -1,9 +1,11 @@
+from datetime import datetime
 import math
 from typing import List, Optional, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.models.responder import Responder
 from app.models.responder_location import ResponderLocation
 from app.models.ticket import Ticket
@@ -20,12 +22,14 @@ class DispatchService:
         exclude_responder_ids: Optional[Set[str]] = None
     ):
         """
-        Return the best eligible responder and their score/distance without creating an assignment.
+        Return the best eligible responder within the configured service radius and their score/distance without creating an assignment.
         Filters for:
         - Responder is_available == True, is_online == True
         - Responder type or skills match ticket service_type
         - Responder not in exclude_responder_ids (e.g. previously declined this ticket)
         - Responder not currently busy on an active accepted job
+        - Responder has a fresh, valid location within DISPATCH_RADIUS_KM
+        - Nearest eligible worker within radius is selected
         """
         if exclude_responder_ids is None:
             exclude_responder_ids = set()
@@ -33,7 +37,7 @@ class DispatchService:
             exclude_responder_ids = set(exclude_responder_ids)
 
         print(f"[DISPATCH START] ticket_id={ticket.id}")
-        print(f"[CANDIDATE SEARCH] ticket_id={ticket.id} customer_location=({ticket.latitude}, {ticket.longitude}) service_type={ticket.service_type.value}")
+        print(f"[DISPATCH LOCATION]\nCustomer: {ticket.latitude}, {ticket.longitude}")
 
         # Exclude responders who are currently busy with an active accepted ticket
         busy_stmt = (
@@ -68,22 +72,22 @@ class DispatchService:
 
             # Check 1: Previously declined / excluded
             if resp.id in exclude_responder_ids:
-                print(f"[RESPONDER REJECTED] id={resp.id} name={resp_name} reason=PREVIOUSLY_DECLINED_OR_EXCLUDED")
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: PREVIOUSLY_DECLINED")
                 continue
 
             # Check 2: Busy on active accepted job
             if resp.id in busy_responder_ids:
-                print(f"[RESPONDER REJECTED] id={resp.id} name={resp_name} reason=BUSY_ON_ACTIVE_JOB")
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: BUSY")
                 continue
 
             # Check 3: Online status
             if not resp.is_online:
-                print(f"[RESPONDER REJECTED] id={resp.id} name={resp_name} reason=OFFLINE")
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: OFFLINE")
                 continue
 
             # Check 4: Availability status
             if not resp.is_available:
-                print(f"[RESPONDER REJECTED] id={resp.id} name={resp_name} reason=NOT_AVAILABLE")
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: NOT_AVAILABLE")
                 continue
 
             # Check 5: Service Type & Skill Compatibility
@@ -97,29 +101,44 @@ class DispatchService:
             )
 
             if not (type_match or general_match or skill_match):
-                print(f"[RESPONDER REJECTED] id={resp.id} name={resp_name} reason=SERVICE_MISMATCH (resp_type={resp.type.value}, ticket_type={ticket.service_type.value})")
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: WRONG_SKILL")
                 continue
 
-            # Check 6: Location coordinates
+            # Check 6: Location coordinates and fresh timestamp
             latest_loc = max(resp.locations, key=lambda l: l.created_at) if resp.locations else None
-            if latest_loc:
-                resp_lat, resp_lng = latest_loc.latitude, latest_loc.longitude
-            else:
-                resp_lat, resp_lng = 11.0168, 76.9558
+            if not latest_loc:
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: NO_LOCATION")
+                continue
 
-            dist = haversine_distance(ticket.latitude, ticket.longitude, resp_lat, resp_lng)
+            # Check 7: Stale location check
+            loc_age = (datetime.utcnow() - latest_loc.created_at).total_seconds()
+            print(f"[RESPONDER LOCATION]\nWorker: {resp.id}\nLocation: {latest_loc.latitude}, {latest_loc.longitude}\nLocation Age: {int(loc_age)}s")
+
+            if loc_age > settings.DISPATCH_LOCATION_MAX_AGE_SECONDS:
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: STALE_LOCATION")
+                continue
+
+            # Check 8: Service radius check (Haversine distance)
+            dist = haversine_distance(ticket.latitude, ticket.longitude, latest_loc.latitude, latest_loc.longitude)
+            print(f"[DISPATCH DISTANCE]\nWorker: {resp.id}\nDistance: {dist:.2f} km\nRadius: {settings.DISPATCH_RADIUS_KM} km")
+
+            if dist > settings.DISPATCH_RADIUS_KM:
+                print(f"[DISPATCH REJECTED]\nWorker: {resp.id}\nReason: OUTSIDE_SERVICE_RADIUS")
+                continue
+
             score = 100.0 / max(dist, 0.1)
-
-            print(f"[CANDIDATE ELIGIBLE] id={resp.id} name={resp_name} distance_km={dist:.2f} score={score:.2f}")
+            print(f"[DISPATCH ELIGIBLE]\nWorker: {resp.id}")
             eligible_candidates.append((resp, score, dist))
 
         if not eligible_candidates:
-            print(f"[DISPATCH RESULT] ticket_id={ticket.id} selected_responder_id=NONE (No eligible candidates)")
+            print(f"[DISPATCH RESULT]\nSelected Worker: NONE\nReason: No eligible workers within service radius")
             return None
 
+        # Select nearest eligible worker (highest score corresponds to lowest distance)
         best = max(eligible_candidates, key=lambda x: x[1])
-        print(f"[DISPATCH RESULT] ticket_id={ticket.id} selected_responder_id={best[0].id} selected_responder_name={best[0].user.full_name if best[0].user else ''} distance_km={best[2]:.2f}")
+        print(f"[DISPATCH RESULT]\nSelected Worker: {best[0].id}\nDistance: {best[2]:.2f} km")
         return (best[0], best[1])
+
 
     @staticmethod
     async def match_and_assign(

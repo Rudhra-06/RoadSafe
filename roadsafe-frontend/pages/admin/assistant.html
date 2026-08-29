@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoadSafe Knowledge &amp; Operations AI - Admin ERP</title>
-    <link rel="stylesheet" href="../../css/styles.css">
+    <title>Admin Dashboard - RoadSafe ERP</title>
+    <script>window.location.replace('dashboard.html');</script>
 </head>
 <body style="align-items: flex-start;">
     <div class="desktop-container">
@@ -81,9 +81,9 @@
             </div>
 
             <!-- Input Box -->
-            <form id="adminForm" style="display:flex; gap:10px; margin-top:auto;">
-                <input type="text" id="adminQuery" class="input-field" placeholder="Ask a question about emergency workflows, pricing, safety..." required style="flex:1;" />
-                <button type="submit" id="adminSendBtn" class="btn btn-primary btn-inline" style="padding:0 24px; min-height:42px;">
+            <form id="adminForm" style="display:flex; gap:10px; margin-top:auto; align-items:center;">
+                <input type="text" id="adminQuery" class="input-field" placeholder="Ask a question about emergency workflows, pricing, safety..." required style="flex:1; min-width:0; margin-bottom:0;" />
+                <button type="submit" id="adminSendBtn" class="btn btn-primary btn-inline" style="padding:0 24px; min-height:48px; width:auto; flex-shrink:0; margin:0;">
                     <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Search Knowledge
                 </button>

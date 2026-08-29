@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_SECRET: str | None = None
     RAZORPAY_CURRENCY: str = "INR"
     INVOICE_TAX_RATE: float = 0.0
+    DISPATCH_RADIUS_KM: float = 50.0
+    DISPATCH_LOCATION_MAX_AGE_SECONDS: int = 86400
 
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

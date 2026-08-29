@@ -42,10 +42,10 @@
             </div>
         </div>
 
-        <form id="askForm" style="display:flex; gap:8px; flex-shrink:0; background:var(--surface-white); padding-top:8px; border-top:1px solid var(--border-light);">
-            <input type="text" id="queryInput" class="input-field" placeholder="Ask about safety, tyre, battery, towing…" required style="flex:1;" autocomplete="off" />
-            <button type="submit" id="sendBtn" class="btn btn-primary" style="min-width:48px; padding:0 16px;">
-                <svg viewBox="0 0 24 24" style="stroke:#fff;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <form id="askForm" class="chat-input-bar">
+            <input type="text" id="queryInput" class="input-field" placeholder="Ask about safety, tyre, battery, towing…" required autocomplete="off" />
+            <button type="submit" id="sendBtn" class="btn-send" aria-label="Send query">
+                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
         </form>
     </section>

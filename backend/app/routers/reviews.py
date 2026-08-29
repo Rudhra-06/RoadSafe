@@ -61,7 +61,21 @@ async def list_reviews(claims=Depends(get_current_user_claims), db: AsyncSession
         raise HTTPException(403, "Access denied")
 
     result = await db.execute(query)
-    return result.scalars().all()
+    reviews = result.scalars().all()
+    if role == UserRole.RESPONDER.value:
+        return [
+            ReviewRead(
+                id=r.id,
+                ticket_id=r.ticket_id,
+                customer_id="Verified Customer",
+                responder_id=r.responder_id,
+                rating=r.rating,
+                comment=r.comment,
+                created_at=r.created_at
+            )
+            for r in reviews
+        ]
+    return reviews
 
 @router.get("/stats", dependencies=[Depends(RoleChecker([UserRole.ADMIN, UserRole.MANAGER]))])
 async def get_review_stats(db: AsyncSession = Depends(get_db)):

@@ -65,13 +65,23 @@
 
     async function load() {
         try {
-            const tickets = await API.get('/tickets');
+            const [tickets, reviews] = await Promise.all([
+                API.get('/tickets').catch(() => []),
+                API.get('/reviews').catch(() => [])
+            ]);
+            const reviewMap = {};
+            (reviews || []).forEach(r => {
+                if (r.ticket_id) reviewMap[r.ticket_id] = r;
+            });
+
             const done = tickets.filter(t => ['COMPLETED','CANCELLED','FAILED'].includes(t.status));
             if (!done.length) {
                 host.innerHTML = '<div class="empty-state">No completed jobs yet.</div>';
                 return;
             }
-            host.innerHTML = done.map(t => `
+            host.innerHTML = done.map(t => {
+                const rev = reviewMap[t.id];
+                return `
                 <article class="job-card">
                     <div class="job-card-header">
                         <h3>${UI.escape(t.description)}</h3>
@@ -79,11 +89,21 @@
                     </div>
                     <p class="muted" style="font-size:.82rem;margin-top:4px;">Ticket #${UI.escape(t.id.slice(0,8))}…</p>
                     <p class="muted" style="font-size:.82rem;">
-                        <svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:3px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        <svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:3px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                         ${UI.escape(t.vehicle_type || 'Vehicle not recorded')}
                     </p>
+                    ${rev ? `
+                    <div style="margin-top:10px; padding:8px 10px; background:#f0fdf4; border-radius:6px; border:1px solid #bbf7d0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                            <strong style="color:#16a34a; font-size:0.85rem;">${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)} (${rev.rating}/5)</strong>
+                            <small class="muted">${new Date(rev.created_at).toLocaleDateString()}</small>
+                        </div>
+                        <p style="margin:2px 0 0; font-size:0.82rem; color:var(--text-main);">${UI.escape(rev.comment || 'Verified customer feedback')}</p>
+                    </div>
+                    ` : ''}
                 </article>
-            `).join('');
+                `;
+            }).join('');
         } catch (err) {
             UI.alert(msg, err.message || 'Could not load job history.');
             host.innerHTML = '';
