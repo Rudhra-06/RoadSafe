@@ -76,3 +76,19 @@ class NotificationService:
         await db.commit()
         await db.refresh(notif)
         return notif
+
+    @staticmethod
+    async def mark_all_as_read(
+        db: AsyncSession,
+        user_id: str
+    ) -> dict:
+        result = await db.execute(
+            select(Notification)
+            .where(Notification.user_id == user_id, Notification.is_read == False)
+        )
+        notifs = result.scalars().all()
+        for n in notifs:
+            n.is_read = True
+        await db.commit()
+        return {"message": "All notifications marked as read", "count": len(notifs)}
+

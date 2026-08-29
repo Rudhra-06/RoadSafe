@@ -212,10 +212,10 @@
                 shop_address:   shopAddress,
                 skills:         skills
             });
-            UI.alert(messageEl, 'Account created successfully! You can now sign in.', 'success');
+            UI.alert(messageEl, 'Worker account created successfully.', 'success');
             form.reset();
             skillsGrid.querySelectorAll('input').forEach(i => i.checked = false);
-            setTimeout(() => window.location.href = 'login.html', 2000);
+            setTimeout(() => window.location.href = 'login.html', 1500);
         } catch (err) {
             UI.alert(messageEl, err.message || 'Registration could not be completed. Please try again.');
         } finally {

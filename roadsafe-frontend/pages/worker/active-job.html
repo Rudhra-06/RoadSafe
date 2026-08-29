@@ -6,6 +6,8 @@
     <meta name="description" content="Manage your active roadside assistance job.">
     <title>Active Job — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         .status-btn {
             min-height: 56px;
@@ -34,6 +36,9 @@
 
     <section class="content-body">
         <div id="message"></div>
+
+        <div id="map" style="height: 260px; border-radius: var(--radius-md, 8px); margin-bottom: 16px; border: 1px solid var(--border-light); z-index: 1;"></div>
+
         <div id="jobDetails"></div>
 
         <!-- Status Controls -->
@@ -111,6 +116,54 @@
     const statusBadge = document.getElementById('statusBadgeWrap');
     const completeBtn = document.getElementById('completeBtn');
 
+    let leafMap = null;
+    let custMarker = null;
+    let workMarker = null;
+
+    const customerIcon = L.divIcon({
+        className: 'custom-leaflet-marker customer-marker',
+        html: `<div style="background:#0f766e; width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+               </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+    });
+
+    const workerIcon = L.divIcon({
+        className: 'custom-leaflet-marker worker-marker',
+        html: `<div style="background:#4338ca; width:32px; height:32px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+               </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+
+    function updateMap(cLat, cLng, wLat = null, wLng = null) {
+        if (!leafMap) {
+            leafMap = L.map('map').setView([cLat, cLng], 14);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(leafMap);
+            custMarker = L.marker([cLat, cLng], { icon: customerIcon }).addTo(leafMap)
+                .bindPopup('<b>Customer Location</b>').openPopup();
+        } else {
+            custMarker.setLatLng([cLat, cLng]);
+        }
+
+        if (wLat !== null && wLng !== null) {
+            if (!workMarker) {
+                workMarker = L.marker([wLat, wLng], { icon: workerIcon }).addTo(leafMap)
+                    .bindPopup('<b>Your Current Location</b>');
+            } else {
+                workMarker.setLatLng([wLat, wLng]);
+            }
+
+            const bounds = L.latLngBounds([[cLat, cLng], [wLat, wLng]]);
+            leafMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        }
+    }
+
     // Next status map
     const NEXT = {
         ACCEPTED:   ['EN_ROUTE',    'Set En Route',    'btn-primary'],
@@ -123,25 +176,27 @@
     const DEV_FALLBACK_COORDS = { latitude: 11.0168, longitude: 76.9558 };
     const ENABLE_DEV_FALLBACK = true;
 
-    function startLocationTracking() {
+    function startLocationTracking(cLat, cLng) {
         if (!navigator.geolocation) {
             if (ENABLE_DEV_FALLBACK) {
                 API.patch('/responders/location', DEV_FALLBACK_COORDS).catch(() => {});
+                updateMap(cLat, cLng, DEV_FALLBACK_COORDS.latitude, DEV_FALLBACK_COORDS.longitude);
             }
             return;
         }
         navigator.geolocation.watchPosition(async position => {
             try {
-                await API.patch('/responders/location', {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                });
+                const wLat = position.coords.latitude;
+                const wLng = position.coords.longitude;
+                await API.patch('/responders/location', { latitude: wLat, longitude: wLng });
+                updateMap(cLat, cLng, wLat, wLng);
             } catch (err) {
                 console.error('Location update failed:', err);
             }
         }, () => {
             if (ENABLE_DEV_FALLBACK) {
                 API.patch('/responders/location', DEV_FALLBACK_COORDS).catch(() => {});
+                updateMap(cLat, cLng, DEV_FALLBACK_COORDS.latitude, DEV_FALLBACK_COORDS.longitude);
             }
         }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 });
     }
@@ -152,6 +207,9 @@
         try {
             const t = await API.get('/tickets/' + id);
             statusBadge.innerHTML = UI.statusBadge(t.status);
+
+            updateMap(t.latitude, t.longitude);
+            startLocationTracking(t.latitude, t.longitude);
 
             jobDetails.innerHTML = `
             <section class="card">
@@ -253,8 +311,8 @@
         }
     });
 
-    startLocationTracking();
     load();
 </script>
 </body>
 </html>
+

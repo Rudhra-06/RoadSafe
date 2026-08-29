@@ -5,31 +5,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#714b67">
-    <title>RoadSafe GPS</title>
+    <title>RoadSafe GPS — Emergency Roadside Assistance ERP</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 960px;
+            margin: 30px auto 0;
+            padding: 0 16px;
+        }
+        .portal-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-xl);
+            padding: 24px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            backdrop-filter: blur(8px);
+        }
+        .portal-card h3 {
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 6px;
+        }
+        .portal-card p {
+            font-size: 0.86rem;
+            color: var(--border-light);
+            margin-bottom: 20px;
+        }
+        .portal-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+    </style>
 </head>
 
-<body style="background: var(--primary-dark); color: white; display:flex; justify-content: center; align-items: center; min-height:100vh;">
+<body style="background: var(--primary-dark); color: white; display:flex; justify-content: center; align-items: center; min-height:100vh; padding: 30px 0;">
 
-    <div style="text-align: center; padding: 20px;">
-        <h1 style="color: var(--accent-teal); font-size: 2.5rem; margin-bottom: 10px;">RoadSafe GPS</h1>
-        <p style="color: var(--border-light); margin-bottom: 30px;">24/7 Real-Time Roadside Assistance ERP Platform</p>
+    <div style="width: 100%; text-align: center;">
+        <h1 style="color: var(--accent-teal); font-size: 2.5rem; margin-bottom: 8px;">RoadSafe GPS</h1>
+        <p style="color: var(--border-light); font-size: 1.05rem;">24/7 Real-Time Roadside Assistance ERP Platform</p>
 
-        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 300px; margin: 0 auto;">
-            <a href="pages/customer/login.html" class="btn btn-primary" style="text-decoration: none;">Customer
-                Portal</a>
-            <a href="pages/worker/login.html" class="btn btn-outline"
-                style="color: white; border-color: white; text-decoration: none;">Responder / Worker Portal</a>
-            <a href="pages/admin/login.html" class="btn btn-outline"
-                style="color: var(--border-light); border-color: var(--text-secondary); text-decoration: none;">Admin
-                ERP Portal</a>
+        <div class="portal-grid">
+            <!-- Customer Portal -->
+            <div class="portal-card">
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: var(--accent-teal); margin-bottom: 6px;">Customer / Driver</div>
+                    <h3>Need roadside assistance?</h3>
+                    <p>Request fast towing, battery jumpstarts, tyre repairs &amp; live tracking.</p>
+                </div>
+                <div class="portal-btns">
+                    <a href="pages/customer/login.html" class="btn btn-primary" style="text-decoration: none;">Customer Login</a>
+                    <a href="pages/customer/register.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.4); text-decoration: none;">Customer Register</a>
+                </div>
+            </div>
+
+            <!-- Worker Portal -->
+            <div class="portal-card">
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: var(--accent-teal); margin-bottom: 6px;">Worker / Mechanic</div>
+                    <h3>Provide roadside assistance</h3>
+                    <p>Receive job dispatches, accept emergency tickets &amp; record service parts.</p>
+                </div>
+                <div class="portal-btns">
+                    <a href="pages/worker/login.html" class="btn btn-primary" style="text-decoration: none; background: var(--accent-teal); border-color: var(--accent-teal);">Worker Login</a>
+                    <a href="pages/worker/register.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.4); text-decoration: none;">Worker Register</a>
+                </div>
+            </div>
+
+            <!-- Admin Portal -->
+            <div class="portal-card">
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: var(--accent-teal); margin-bottom: 6px;">Admin / Manager</div>
+                    <h3>Manage RoadSafe operations</h3>
+                    <p>Executive analytics, ticket control, mechanic management &amp; revenue metrics.</p>
+                </div>
+                <div class="portal-btns">
+                    <a href="pages/admin/login.html" class="btn btn-outline" style="color: white; border-color: white; text-decoration: none; margin-top: 28px;">Admin Login</a>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
 </body>
 
-</html>
+</html>

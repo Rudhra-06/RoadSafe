@@ -131,7 +131,7 @@
                 await Auth.login({
                     email: document.getElementById('email').value.trim(),
                     password: document.getElementById('password').value
-                });
+                }, 'RESPONDER');
                 // Auth.login redirects on success via Auth.redirectUser
             } catch (err) {
                 errorBox.textContent = err.message || 'Invalid email or password. Please try again.';

@@ -16,11 +16,20 @@ router = APIRouter(prefix="/reviews", tags=["Reviews"])
 async def create_review(payload: ReviewCreate, claims=Depends(get_current_user_claims), db: AsyncSession = Depends(get_db)):
     if claims["role"] != UserRole.CUSTOMER.value:
         raise HTTPException(403, "Only customers can submit reviews")
+    
     ticket = (await db.execute(select(Ticket).where(Ticket.id == payload.ticket_id, Ticket.customer_id == claims["user_id"]))).scalars().first()
     if not ticket or ticket.status != TicketStatus.COMPLETED:
         raise HTTPException(400, "A completed customer ticket is required")
-    if (await db.execute(select(Review).where(Review.ticket_id == ticket.id))).scalars().first():
-        raise HTTPException(409, "A review already exists for this ticket")
+
+    # Idempotent handling: if review already exists for this ticket, update it
+    existing_review = (await db.execute(select(Review).where(Review.ticket_id == ticket.id))).scalars().first()
+    if existing_review:
+        existing_review.rating = payload.rating
+        existing_review.comment = payload.comment
+        await db.commit()
+        await db.refresh(existing_review)
+        return existing_review
+
     assignment = (await db.execute(select(TicketAssignment).where(TicketAssignment.ticket_id == ticket.id, TicketAssignment.status == AssignmentStatus.ACCEPTED))).scalars().first()
     review = Review(
         ticket_id=ticket.id,
@@ -34,9 +43,25 @@ async def create_review(payload: ReviewCreate, claims=Depends(get_current_user_c
     await db.refresh(review)
     return review
 
-@router.get("", response_model=list[ReviewRead], dependencies=[Depends(RoleChecker([UserRole.ADMIN, UserRole.MANAGER]))])
-async def list_reviews(db: AsyncSession = Depends(get_db)):
-    return (await db.execute(select(Review).order_by(Review.created_at.desc()))).scalars().all()
+@router.get("", response_model=list[ReviewRead])
+async def list_reviews(claims=Depends(get_current_user_claims), db: AsyncSession = Depends(get_db)):
+    role = claims["role"]
+    user_id = claims["user_id"]
+
+    if role in [UserRole.ADMIN.value, UserRole.MANAGER.value]:
+        query = select(Review).order_by(Review.created_at.desc())
+    elif role == UserRole.CUSTOMER.value:
+        query = select(Review).where(Review.customer_id == user_id).order_by(Review.created_at.desc())
+    elif role == UserRole.RESPONDER.value:
+        resp = (await db.execute(select(Responder).where(Responder.user_id == user_id))).scalars().first()
+        if not resp:
+            return []
+        query = select(Review).where(Review.responder_id == resp.id).order_by(Review.created_at.desc())
+    else:
+        raise HTTPException(403, "Access denied")
+
+    result = await db.execute(query)
+    return result.scalars().all()
 
 @router.get("/stats", dependencies=[Depends(RoleChecker([UserRole.ADMIN, UserRole.MANAGER]))])
 async def get_review_stats(db: AsyncSession = Depends(get_db)):
@@ -44,7 +69,6 @@ async def get_review_stats(db: AsyncSession = Depends(get_db)):
     total_reviews = len(reviews)
     avg_rating = round(sum(r.rating for r in reviews) / total_reviews, 2) if total_reviews else 0.0
 
-    # Group by responder
     responder_map = {}
     for r in reviews:
         rid = r.responder_id or "unassigned"
@@ -70,3 +94,4 @@ async def get_review_stats(db: AsyncSession = Depends(get_db)):
 @router.get("/responders/{responder_id}", response_model=list[ReviewRead])
 async def get_responder_reviews(responder_id: str, db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Review).where(Review.responder_id == responder_id).order_by(Review.created_at.desc()))).scalars().all()
+

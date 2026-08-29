@@ -8,6 +8,7 @@ from app.models.ticket import Ticket
 from app.models.ticket_assignment import TicketAssignment
 from app.models.ticket_status_log import TicketStatusLog
 from app.models.responder import Responder
+from app.models.user import User
 from app.schemas.ticket import TicketCreate, TicketCreateResponse, TicketRead
 from app.services.dispatch_service import DispatchService
 from app.services.responder_service import ResponderService
@@ -23,7 +24,9 @@ class TicketService:
     @staticmethod
     async def list_tickets_for_user(db: AsyncSession, user_id: str, role: str) -> List[Ticket]:
         query = select(Ticket).options(
-            selectinload(Ticket.assignments), selectinload(Ticket.status_logs)
+            selectinload(Ticket.customer),
+            selectinload(Ticket.assignments),
+            selectinload(Ticket.status_logs)
         ).order_by(Ticket.created_at.desc())
         if role == "CUSTOMER":
             query = query.filter(Ticket.customer_id == user_id)
@@ -53,6 +56,8 @@ class TicketService:
         db.add(ticket)
         await db.commit()
         await db.refresh(ticket)
+
+        print(f"[TICKET CREATE] ticket_id={ticket.id} customer_id={customer_id} service_type={ticket.service_type.value} latitude={ticket.latitude} longitude={ticket.longitude} priority={ticket.priority.value}")
 
         log = TicketStatusLog(
             ticket_id=ticket.id,
@@ -96,7 +101,12 @@ class TicketService:
                 db, user_id=best_responder.user_id, title="New Job Offer", message=f"New emergency ticket #{ticket.id[:8]} ({ticket.service_type.value}) assigned to you.", type="DISPATCH", ticket_id=ticket.id
             )
 
-            # Notify targeted responder
+            cust_res = await db.execute(select(User).filter(User.id == customer_id))
+            customer_user = cust_res.scalars().first()
+            customer_name = customer_user.full_name if customer_user else "Customer"
+            customer_phone = ticket.contact_phone or (customer_user.phone_number if customer_user else "")
+
+            # Notify targeted responder with rich payload
             await ws_manager.send_to_responder(
                 responder_id=best_responder.id,
                 message={
@@ -105,8 +115,13 @@ class TicketService:
                     "assignment_id": active_assignment.id,
                     "priority": ticket.priority.value,
                     "service_type": ticket.service_type.value,
+                    "vehicle_type": ticket.vehicle_type,
+                    "description": ticket.description,
                     "latitude": ticket.latitude,
                     "longitude": ticket.longitude,
+                    "customer_name": customer_name,
+                    "contact_phone": customer_phone,
+                    "score": score
                 }
             )
         else:
@@ -183,6 +198,11 @@ class TicketService:
                 db, ticket, TicketStatus.ASSIGNED, manager_user_id, f"Manually assigned to responder {responder.id}"
             )
 
+        cust_res = await db.execute(select(User).filter(User.id == ticket.customer_id))
+        customer_user = cust_res.scalars().first()
+        customer_name = customer_user.full_name if customer_user else "Customer"
+        customer_phone = ticket.contact_phone or (customer_user.phone_number if customer_user else "")
+
         await ws_manager.send_to_responder(
             responder_id=responder.id,
             message={
@@ -191,6 +211,12 @@ class TicketService:
                 "assignment_id": assignment.id,
                 "priority": ticket.priority.value,
                 "service_type": ticket.service_type.value,
+                "vehicle_type": ticket.vehicle_type,
+                "description": ticket.description,
+                "latitude": ticket.latitude,
+                "longitude": ticket.longitude,
+                "customer_name": customer_name,
+                "contact_phone": customer_phone,
             }
         )
 
@@ -202,6 +228,14 @@ class TicketService:
     ) -> TicketAssignment:
         ticket = await TicketService.get_ticket_by_id(db, ticket_id)
         responder = await ResponderService.get_responder_by_user_id(db, responder_user_id)
+
+        # Concurrency Check: If worker accepts, verify ticket was not already accepted by another responder
+        if accepted and ticket.status in [TicketStatus.ACCEPTED, TicketStatus.EN_ROUTE, TicketStatus.ARRIVED, TicketStatus.IN_SERVICE, TicketStatus.COMPLETED]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This request has already been accepted by another responder."
+            )
+
         result = await db.execute(select(TicketAssignment).filter(
             TicketAssignment.ticket_id == ticket_id,
             TicketAssignment.responder_id == responder.id,
@@ -209,28 +243,130 @@ class TicketService:
         ))
         assignment = result.scalars().first()
         if not assignment:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No offered assignment found")
-        assignment.status = AssignmentStatus.ACCEPTED if accepted else AssignmentStatus.REJECTED
-        await db.commit()
-        await db.refresh(assignment)
-        await TicketService._transition_status(
-            db, ticket,
-            TicketStatus.ACCEPTED if accepted else TicketStatus.REASSIGN,
-            responder_user_id,
-            "Responder accepted assignment" if accepted else "Responder rejected assignment",
-        )
-        if accepted and ticket.customer_id:
-            from app.services.notification_service import NotificationService
-            await NotificationService.create_notification(
-                db, user_id=ticket.customer_id, title="Mechanic Accepted", message="A technician has accepted your request and is preparing.", type="STATUS", ticket_id=ticket.id
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No offered assignment found for this request."
             )
-        return assignment
+
+        if accepted:
+            assignment.status = AssignmentStatus.ACCEPTED
+            await db.commit()
+            await db.refresh(assignment)
+
+            await TicketService._transition_status(
+                db, ticket,
+                TicketStatus.ACCEPTED,
+                responder_user_id,
+                "Responder accepted assignment"
+            )
+
+            if ticket.customer_id:
+                from app.services.notification_service import NotificationService
+                await NotificationService.create_notification(
+                    db,
+                    user_id=ticket.customer_id,
+                    title="Mechanic Assigned",
+                    message=f"{responder.shop_name or responder.user.full_name} accepted your request.",
+                    type="STATUS",
+                    ticket_id=ticket.id
+                )
+
+            # Broadcast STATUS_UPDATE over WS
+            await ws_manager.broadcast_to_ticket(
+                ticket_id=ticket.id,
+                message={
+                    "event": "STATUS_UPDATE",
+                    "ticket_id": ticket.id,
+                    "new_status": TicketStatus.ACCEPTED.value,
+                    "reason": "Responder accepted assignment",
+                    "responder": {
+                        "id": responder.id,
+                        "user_id": responder.user_id,
+                        "full_name": responder.user.full_name if responder.user else "",
+                        "shop_name": responder.shop_name,
+                        "shop_address": responder.shop_address,
+                        "phone_number": responder.user.phone_number if responder.user else ""
+                    }
+                }
+            )
+            return assignment
+
+        else:
+            # Decline Flow
+            assignment.status = AssignmentStatus.REJECTED
+            await db.commit()
+            await db.refresh(assignment)
+
+            # Fetch all responder IDs that have already rejected or been offered this ticket
+            rejected_stmt = select(TicketAssignment.responder_id).where(
+                TicketAssignment.ticket_id == ticket_id
+            )
+            rej_res = await db.execute(rejected_stmt)
+            excluded_ids = set(rej_res.scalars().all())
+
+            # Attempt automatic re-dispatch to next eligible responder
+            next_dispatch = await DispatchService.find_best_responder(
+                db, ticket, exclude_responder_ids=excluded_ids
+            )
+
+            if next_dispatch:
+                next_responder, next_score = next_dispatch
+                new_assignment = TicketAssignment(
+                    ticket_id=ticket.id,
+                    responder_id=next_responder.id,
+                    status=AssignmentStatus.OFFERED,
+                    score=next_score
+                )
+                db.add(new_assignment)
+                await db.commit()
+                await db.refresh(new_assignment)
+
+                await TicketService._transition_status(
+                    db, ticket,
+                    TicketStatus.ASSIGNED,
+                    responder_user_id,
+                    f"Reassigned to responder {next_responder.id}"
+                )
+
+                cust_res = await db.execute(select(User).filter(User.id == ticket.customer_id))
+                customer_user = cust_res.scalars().first()
+                customer_name = customer_user.full_name if customer_user else "Customer"
+                customer_phone = ticket.contact_phone or (customer_user.phone_number if customer_user else "")
+
+                await ws_manager.send_to_responder(
+                    responder_id=next_responder.id,
+                    message={
+                        "event": "NEW_ASSIGNMENT",
+                        "ticket_id": ticket.id,
+                        "assignment_id": new_assignment.id,
+                        "priority": ticket.priority.value,
+                        "service_type": ticket.service_type.value,
+                        "vehicle_type": ticket.vehicle_type,
+                        "description": ticket.description,
+                        "latitude": ticket.latitude,
+                        "longitude": ticket.longitude,
+                        "customer_name": customer_name,
+                        "contact_phone": customer_phone,
+                        "score": next_score
+                    }
+                )
+            else:
+                # No eligible responders remain
+                await TicketService._transition_status(
+                    db, ticket,
+                    TicketStatus.NO_RESPONDER,
+                    responder_user_id,
+                    "No available responders found nearby"
+                )
+
+            return assignment
 
     @staticmethod
     async def get_ticket_by_id(db: AsyncSession, ticket_id: str) -> Ticket:
         result = await db.execute(
             select(Ticket)
             .options(
+                selectinload(Ticket.customer),
                 selectinload(Ticket.assignments),
                 selectinload(Ticket.status_logs)
             )
@@ -264,7 +400,39 @@ class TicketService:
         await db.commit()
         await db.refresh(ticket)
 
-        # Broadcast state change to ticket channel
+        # Retrieve active assignment and responder details
+        active_assignment_stmt = select(TicketAssignment).filter(
+            TicketAssignment.ticket_id == ticket.id,
+            TicketAssignment.status == AssignmentStatus.ACCEPTED
+        )
+        res = await db.execute(active_assignment_stmt)
+        active_assignment = res.scalars().first()
+
+        responder_data = None
+        if active_assignment:
+            resp_stmt = select(Responder).options(selectinload(Responder.user)).filter(Responder.id == active_assignment.responder_id)
+            r_res = await db.execute(resp_stmt)
+            responder = r_res.scalars().first()
+            if responder:
+                if new_status in [TicketStatus.COMPLETED, TicketStatus.CANCELLED, TicketStatus.FAILED]:
+                    responder.is_available = True
+                    db.add(responder)
+                    await db.commit()
+                elif new_status in [TicketStatus.ACCEPTED, TicketStatus.EN_ROUTE, TicketStatus.ARRIVED, TicketStatus.IN_SERVICE]:
+                    responder.is_available = False
+                    db.add(responder)
+                    await db.commit()
+
+                responder_data = {
+                    "id": responder.id,
+                    "user_id": responder.user_id,
+                    "full_name": responder.user.full_name if responder.user else "",
+                    "shop_name": responder.shop_name,
+                    "shop_address": responder.shop_address,
+                    "phone_number": responder.user.phone_number if responder.user else ""
+                }
+
+        # Broadcast state change to ticket WebSocket channel
         await ws_manager.broadcast_to_ticket(
             ticket_id=ticket.id,
             message={
@@ -273,11 +441,12 @@ class TicketService:
                 "previous_status": prev_status.value if prev_status else None,
                 "new_status": new_status.value,
                 "reason": reason,
+                "responder": responder_data,
                 "updated_at": ticket.updated_at.isoformat()
             }
         )
 
-        # Create contextual persistent notification for customer
+        # Create contextual persistent notifications for customer
         status_notifs = {
             TicketStatus.EN_ROUTE: ("Mechanic En Route", "Your technician is on the way to your location."),
             TicketStatus.ARRIVED: ("Mechanic Arrived", "Your technician has arrived at the scene."),

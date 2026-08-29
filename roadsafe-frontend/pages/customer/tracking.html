@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Track Assistance — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <main class="pwa-container no-bottom-nav">
@@ -19,13 +21,7 @@
     <section class="content-body">
         <div id="message"></div>
 
-        <div class="map-placeholder">
-            <div>
-                <svg class="icon" viewBox="0 0 24 24" style="width:36px; height:36px; color:var(--primary-teal); margin-bottom:6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <p style="font-weight:600;">GPS Telemetry Active</p>
-                <small id="coordinates" style="color:var(--text-secondary);"></small>
-            </div>
-        </div>
+        <div id="map" style="height: 280px; border-radius: var(--radius-md, 8px); margin-bottom: 16px; border: 1px solid var(--border-light); z-index: 1;"></div>
 
         <section class="card">
             <h3 id="title" style="font-size:1.05rem; font-weight:700;">Loading request…</h3>
@@ -61,6 +57,72 @@
     const id = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TICKET_ID);
     const steps = ['REQUESTED', 'ASSIGNED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_SERVICE', 'COMPLETED'];
     let ticket;
+    let responderInfo = null;
+
+    let leafMap = null;
+    let custMarker = null;
+    let workMarker = null;
+
+    const customerIcon = L.divIcon({
+        className: 'custom-leaflet-marker customer-marker',
+        html: `<div style="background:#0f766e; width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+               </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+    });
+
+    const workerIcon = L.divIcon({
+        className: 'custom-leaflet-marker worker-marker',
+        html: `<div style="background:#4338ca; width:32px; height:32px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5"><path d="M14.7 6.3a4 4 0 0 1-5 5L3 18l3 3 6.7-6.7a4 4 0 0 1 5-5l-3 3-2-2 3-3z"/></svg>
+               </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+
+    function calcDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function initOrUpdateMap(cLat, cLng, wLat = null, wLng = null, responderData = null) {
+        if (!leafMap) {
+            leafMap = L.map('map').setView([cLat, cLng], 14);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(leafMap);
+            custMarker = L.marker([cLat, cLng], { icon: customerIcon }).addTo(leafMap)
+                .bindPopup('<b>Your Location</b>');
+        } else {
+            custMarker.setLatLng([cLat, cLng]);
+        }
+
+        if (wLat !== null && wLng !== null) {
+            const name = responderData?.shop_name || responderData?.full_name || 'Assigned Technician';
+            const phone = responderData?.phone_number ? `<br>Tel: ${responderData.phone_number}` : '';
+            const dist = calcDistance(cLat, cLng, wLat, wLng).toFixed(2);
+            const popupContent = `<b>${UI.escape(name)}</b>${phone}<br>Status: Dispatch Active<br>Distance: ${dist} km`;
+
+            if (!workMarker) {
+                workMarker = L.marker([wLat, wLng], { icon: workerIcon }).addTo(leafMap)
+                    .bindPopup(popupContent);
+            } else {
+                workMarker.setLatLng([wLat, wLng]);
+                workMarker.setPopupContent(popupContent);
+            }
+
+            // Adjust view to show both customer and worker
+            const bounds = L.latLngBounds([[cLat, cLng], [wLat, wLng]]);
+            leafMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        }
+    }
 
     if (!id) location.href = 'history.html';
 
@@ -68,6 +130,7 @@
         if (!responderId) return;
         try {
             const resp = await API.get('/responders/' + responderId);
+            responderInfo = resp;
             const card = document.getElementById('responderCard');
             const details = document.getElementById('responderDetails');
             card.style.display = 'block';
@@ -75,8 +138,9 @@
                 <p style="font-weight:600; font-size:0.95rem;">${UI.escape(resp.shop_name || resp.full_name || 'Assigned Technician')}</p>
                 <p class="muted" style="font-size:0.82rem;">${UI.escape((resp.type || '').replaceAll('_', ' '))}${resp.phone_number ? ` · Tel: ${UI.escape(resp.phone_number)}` : ''}</p>
             `;
-            if (resp.latitude && resp.longitude) {
-                document.getElementById('mechanicLocation').textContent = `Mechanic Location: ${resp.latitude.toFixed(4)}, ${resp.longitude.toFixed(4)}`;
+            if (resp.latitude && resp.longitude && ticket) {
+                document.getElementById('mechanicLocation').textContent = `Mechanic Live GPS: ${resp.latitude.toFixed(4)}, ${resp.longitude.toFixed(4)}`;
+                initOrUpdateMap(ticket.latitude, ticket.longitude, resp.latitude, resp.longitude, resp);
             }
         } catch (e) {
             console.log('Responder details fetch:', e);
@@ -88,7 +152,8 @@
         document.getElementById('statusBadge').innerHTML = UI.statusBadge(t.status);
         document.getElementById('title').textContent = t.description;
         document.getElementById('ticketId').textContent = 'Ticket #' + t.id.slice(0, 8);
-        document.getElementById('coordinates').textContent = `Customer Location: ${(t.latitude||0).toFixed(4)}, ${(t.longitude||0).toFixed(4)}`;
+
+        initOrUpdateMap(t.latitude, t.longitude);
 
         const failed = ['CANCELLED', 'FAILED', 'NO_RESPONDER'].includes(t.status);
         const current = steps.indexOf(t.status);
@@ -152,9 +217,13 @@
                 if (locEl) {
                     locEl.textContent = `Mechanic Live GPS: ${Number(e.latitude).toFixed(4)}, ${Number(e.longitude).toFixed(4)}`;
                 }
+                if (ticket) {
+                    initOrUpdateMap(ticket.latitude, ticket.longitude, Number(e.latitude), Number(e.longitude), responderInfo);
+                }
             }
         });
     }
 </script>
 </body>
 </html>
+

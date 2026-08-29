@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Request Assistance — RoadSafe</title>
     <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -61,8 +63,8 @@
                 <div class="form-group">
                     <label class="form-label" for="location">GPS Coordinates</label>
                     <input class="input-field" id="location" readonly style="background:#f1f5f9;">
-                    <p class="muted" id="locationHelp" style="font-size:0.8rem; margin-top:4px;">Requesting device GPS
-                        coordinates…</p>
+                    <div id="map" style="height: 220px; border-radius: var(--radius-md, 8px); margin-top: 10px; border: 1px solid var(--border-light); z-index: 1;"></div>
+                    <p class="muted" id="locationHelp" style="font-size:0.8rem; margin-top:4px;">Requesting device GPS coordinates…</p>
                 </div>
 
                 <button type="submit" class="btn btn-primary" disabled id="continue" style="margin-top:12px;">
@@ -98,6 +100,33 @@
         let isSimulated = false;
         let services = [];
 
+        let leafMap = null;
+        let leafMarker = null;
+
+        const customerIcon = L.divIcon({
+            className: 'custom-leaflet-marker customer-marker',
+            html: `<div style="background:#0f766e; width:28px; height:28px; border-radius:50%; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                   </div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        function renderMap(lat, lng) {
+            if (!leafMap) {
+                leafMap = L.map('map').setView([lat, lng], 14);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(leafMap);
+                leafMarker = L.marker([lat, lng], { icon: customerIcon }).addTo(leafMap)
+                    .bindPopup('<b>Your Request Location</b>').openPopup();
+            } else {
+                leafMap.setView([lat, lng], 14);
+                leafMarker.setLatLng([lat, lng]);
+            }
+        }
+
         const type = s => /tow/i.test(s.category || s.name) ? 'TOWING_OPERATOR' : /bike/i.test(s.category || s.name) ? 'BIKE_MECHANIC' : /engine|tyre|tire|mechanic/i.test(s.category || s.name) ? 'CAR_MECHANIC' : 'ROADSIDE_TECHNICIAN';
 
         function applyLocation(loc, simulated) {
@@ -109,6 +138,7 @@
                     ? 'Using simulated location (Coimbatore fallback for dev/testing).'
                     : 'Device GPS location verified.';
                 document.querySelector('#continue').disabled = false;
+                renderMap(coords.latitude, coords.longitude);
             } else {
                 locationInput.value = '';
                 locationHelp.textContent = 'Unable to determine location. Please enable GPS permissions.';
@@ -166,4 +196,4 @@
     </script>
 </body>
 
-</html>
+</html>

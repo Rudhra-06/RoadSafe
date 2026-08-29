@@ -58,7 +58,7 @@
                 await Auth.login({
                     email: document.getElementById('adminEmail').value.trim(),
                     password: document.getElementById('adminPass').value
-                });
+                }, ['ADMIN', 'MANAGER']);
             } catch (err) {
                 errBox.textContent = err.message || 'Authentication failed. Please verify administrator credentials.';
                 errBox.style.display = 'block';

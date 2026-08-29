@@ -87,7 +87,7 @@
             await Auth.login({
                 email:    document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value
-            });
+            }, 'CUSTOMER');
         } catch (err) {
             errorBox.textContent = err.message || 'Invalid email or password. Please try again.';
             errorBox.style.display = 'block';

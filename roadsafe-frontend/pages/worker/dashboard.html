@@ -307,33 +307,42 @@
                 }
 
                 jobsEl.innerHTML = cards.map(t => {
-                    const isOffer = t.assignments?.some(a => a.status === 'OFFERED');
+                    const offer = (t.assignments || []).find(a => a.status === 'OFFERED');
+                    const isOffer = !!offer;
+                    const priorityClass = t.priority === 'EMERGENCY' ? 'badge-danger' : t.priority === 'HIGH' ? 'badge-warning' : 'badge-info';
+
                     return `
-                <article class="job-card">
-                    <div class="job-card-header">
-                        <h3>${UI.escape(t.description)}</h3>
-                        ${isOffer ? `<span class="incoming-badge"><svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1.1.4 2.1.8 3.1a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c1 .4 2 .7 3.1.8a2 2 0 0 1 1.6 1.7z"/></svg>New Job</span>` : UI.statusBadge(t.status)}
+                <article class="job-card" style="border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; background: var(--surface-white);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <span class="badge ${priorityClass}" style="font-size:0.72rem; text-transform:uppercase; margin-bottom:4px; display:inline-block;">${UI.escape(t.priority || 'MEDIUM')} URGENCY</span>
+                            <h3 style="font-size:1.05rem; font-weight:700; color:var(--primary-dark); margin:2px 0;">${UI.escape((t.service_type || '').replaceAll('_', ' '))}</h3>
+                        </div>
+                        ${isOffer ? `<span class="incoming-badge"><svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1.1.4 2.1.8 3.1a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c1 .4 2 .7 3.1.8a2 2 0 0 1 1.6 1.7z"/></svg>NEW REQUEST</span>` : UI.statusBadge(t.status)}
                     </div>
-                    <p class="muted" style="font-size:.82rem;margin-bottom:6px;">
-                        <svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:3px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                        ${UI.escape(t.vehicle_type || 'Vehicle not specified')}
+                    
+                    <p style="font-size:0.9rem; margin-bottom:10px; color:var(--text-main); background:var(--bg-light); padding:8px 10px; border-radius:var(--radius-md);">
+                        <strong>Issue:</strong> ${UI.escape(t.description || 'Roadside assistance requested')}
                     </p>
-                    <p class="muted" style="font-size:.82rem;">
-                        <svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        ${(t.latitude || 0).toFixed(4)}, ${(t.longitude || 0).toFixed(4)}
-                    </p>
-                    <div class="job-actions">
+
+                    <div style="font-size:0.84rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+                        <div><svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:4px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> <strong>Vehicle:</strong> ${UI.escape(t.vehicle_type || 'N/A')}</div>
+                        <div><svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong>Location:</strong> ${(t.latitude || 0).toFixed(4)}, ${(t.longitude || 0).toFixed(4)}</div>
+                        ${t.contact_phone ? `<div><svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;margin-right:4px;"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1.1.4 2.1.8 3.1a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c1 .4 2 .7 3.1.8a2 2 0 0 1 1.6 1.7z"/></svg> <strong>Contact:</strong> ${UI.escape(t.contact_phone)}</div>` : ''}
+                    </div>
+
+                    <div class="job-actions" style="display:flex; gap:10px;">
                         ${isOffer
-                            ? `<button class="btn btn-primary" onclick="respond('${t.id}', true)">
-                                <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
-                                Accept Job
+                            ? `<button class="btn btn-primary" style="flex:1;" onclick="respond('${t.id}', true)">
+                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;"><path d="m5 12 4 4L19 6"/></svg>
+                                Accept Request
                                </button>
-                               <button class="btn btn-outline" onclick="respond('${t.id}', false)">
+                               <button class="btn btn-outline" style="flex:1; border-color:var(--danger-red); color:var(--danger-red);" onclick="respond('${t.id}', false)">
                                 Decline
                                </button>`
-                            : `<a class="btn btn-primary" href="active-job.html?id=${t.id}">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                Open Job
+                            : `<a class="btn btn-primary" style="width:100%; text-align:center; text-decoration:none;" href="active-job.html?id=${t.id}">
+                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Manage Active Job
                                </a>`
                         }
                     </div>

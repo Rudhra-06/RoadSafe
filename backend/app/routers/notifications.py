@@ -38,3 +38,13 @@ async def mark_notification_read(
             detail="Notification not found"
         )
     return notif
+
+
+@router.post("/read-all")
+async def mark_all_notifications_read(
+    claims=Depends(get_current_user_claims),
+    db: AsyncSession = Depends(get_db)
+):
+    """Mark all unread notifications for the authenticated user as read."""
+    return await NotificationService.mark_all_as_read(db, user_id=claims["user_id"])
+

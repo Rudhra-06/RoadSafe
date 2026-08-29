@@ -120,13 +120,19 @@
             }
         }
 
+        const DEV_FALLBACK_COORDS = { latitude: 11.0168, longitude: 76.9558 };
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 p => load(p.coords.latitude, p.coords.longitude),
-                () => UI.alert(document.querySelector('#message'), 'Location permission is required to find nearby providers.')
+                () => {
+                    UI.alert(document.querySelector('#message'), 'Using simulated location (Coimbatore fallback for dev/testing).');
+                    load(DEV_FALLBACK_COORDS.latitude, DEV_FALLBACK_COORDS.longitude);
+                }
             );
         } else {
-            UI.alert(document.querySelector('#message'), 'This browser does not support location services.');
+            UI.alert(document.querySelector('#message'), 'Using simulated location (Coimbatore fallback for dev/testing).');
+            load(DEV_FALLBACK_COORDS.latitude, DEV_FALLBACK_COORDS.longitude);
         }
     </script>
 </body>
